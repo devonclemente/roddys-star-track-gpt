@@ -71,51 +71,69 @@ export function createBoardSpaces(): BoardSpace[] {
 function generateSCurvePath(count: number): { x: number; y: number }[] {
   const positions: { x: number; y: number }[] = [];
   
-  // Create a winding path similar to the original board
-  // The board goes: down-right, then up, then down-right, then up to end
+  // Non-overlapping serpentine path using wide switchbacks
+  // Path flows: left-to-right (row 1), right-to-left (row 2), left-to-right (row 3), etc.
+  // This creates a clear, readable winding path with no crossings
+  
   const path = [
-    // Bottom left, going up-right
-    { x: 10, y: 90 },  // 0 - START
-    { x: 15, y: 82 },  // 1
-    { x: 12, y: 74 },  // 2
-    { x: 18, y: 66 },  // 3
-    { x: 14, y: 58 },  // 4
-    { x: 20, y: 50 },  // 5
-    { x: 16, y: 42 },  // 6
-    { x: 22, y: 34 },  // 7 - star
-    { x: 28, y: 28 },  // 8
-    { x: 35, y: 24 },  // 9
-    { x: 42, y: 22 },  // 10
-    { x: 49, y: 24 },  // 11
-    { x: 55, y: 28 },  // 12
-    { x: 60, y: 34 },  // 13 - star
-    { x: 64, y: 42 },  // 14
-    { x: 60, y: 50 },  // 15
-    { x: 55, y: 56 },  // 16
-    { x: 48, y: 60 },  // 17
-    { x: 42, y: 56 },  // 18
-    { x: 36, y: 50 },  // 19
-    { x: 32, y: 42 },  // 20 - star
-    { x: 38, y: 36 },  // 21
-    { x: 45, y: 34 },  // 22
-    { x: 52, y: 38 },  // 23
-    { x: 56, y: 46 },  // 24
-    { x: 52, y: 54 },  // 25 - star
-    { x: 46, y: 62 },  // 26
-    { x: 52, y: 70 },  // 27
-    { x: 58, y: 76 },  // 28
-    { x: 66, y: 72 },  // 29
-    { x: 72, y: 64 },  // 30 - star
-    { x: 78, y: 56 },  // 31
-    { x: 82, y: 48 },  // 32
-    { x: 78, y: 40 },  // 33
-    { x: 72, y: 34 },  // 34
-    { x: 78, y: 26 },  // 35
-    { x: 84, y: 20 },  // 36 - star
-    { x: 88, y: 28 },  // 37
-    { x: 86, y: 36 },  // 38
-    { x: 90, y: 44 },  // 39
-    { x: 92, y: 52 },  // 40 - END
+    // Row 1: Bottom, going left to right (spaces 0-9)
+    { x: 8, y: 88 },   // 0 - START
+    { x: 18, y: 86 },  // 1
+    { x: 28, y: 88 },  // 2
+    { x: 38, y: 86 },  // 3
+    { x: 48, y: 88 },  // 4
+    { x: 58, y: 86 },  // 5
+    { x: 68, y: 88 },  // 6
+    { x: 78, y: 86 },  // 7 - star
+    { x: 88, y: 84 },  // 8
+    
+    // Curve up to row 2
+    { x: 92, y: 74 },  // 9
+    
+    // Row 2: Going right to left (spaces 10-18)
+    { x: 84, y: 68 },  // 10
+    { x: 74, y: 70 },  // 11
+    { x: 64, y: 68 },  // 12
+    { x: 54, y: 70 },  // 13 - star
+    { x: 44, y: 68 },  // 14
+    { x: 34, y: 70 },  // 15
+    { x: 24, y: 68 },  // 16
+    { x: 14, y: 70 },  // 17
+    
+    // Curve up to row 3
+    { x: 8, y: 58 },   // 18
+    
+    // Row 3: Going left to right (spaces 19-27)
+    { x: 16, y: 50 },  // 19
+    { x: 26, y: 48 },  // 20 - star
+    { x: 36, y: 50 },  // 21
+    { x: 46, y: 48 },  // 22
+    { x: 56, y: 50 },  // 23
+    { x: 66, y: 48 },  // 24
+    { x: 76, y: 50 },  // 25 - star
+    { x: 86, y: 48 },  // 26
+    
+    // Curve up to row 4
+    { x: 92, y: 38 },  // 27
+    
+    // Row 4: Going right to left (spaces 28-35)
+    { x: 84, y: 32 },  // 28
+    { x: 74, y: 34 },  // 29
+    { x: 64, y: 32 },  // 30 - star
+    { x: 54, y: 34 },  // 31
+    { x: 44, y: 32 },  // 32
+    { x: 34, y: 34 },  // 33
+    { x: 24, y: 32 },  // 34
+    
+    // Curve up to row 5
+    { x: 14, y: 24 },  // 35
+    
+    // Row 5: Final stretch going right (spaces 36-40)
+    { x: 24, y: 16 },  // 36 - star
+    { x: 36, y: 14 },  // 37
+    { x: 48, y: 12 },  // 38
+    { x: 60, y: 14 },  // 39
+    { x: 72, y: 12 },  // 40 - END
   ];
 
   // Use the predefined path or generate more if needed
