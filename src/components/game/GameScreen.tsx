@@ -285,12 +285,12 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
         </div>
 
         {/* Right panel - Drawn chains */}
-        <div className="lg:w-48">
+        <div className="lg:w-56 lg:mr-8">
           {gameState.drawnChains && (
             <motion.div
-              className="flex flex-col gap-4 p-4 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col gap-4 p-5 rounded-2xl bg-card/70 backdrop-blur-md border-2 border-primary/30 shadow-glow"
+              initial={{ opacity: 0, scale: 0.9, x: 20 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
             >
               <h3 className="font-display text-lg text-center text-foreground">Your Chains</h3>
               {gameState.drawnChains.map((chain) => (

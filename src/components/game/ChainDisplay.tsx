@@ -10,15 +10,113 @@ interface ChainDisplayProps {
 }
 
 const chainColors = [
-  'from-red-400 to-red-600',
-  'from-blue-400 to-blue-600',
-  'from-green-400 to-green-600',
-  'from-yellow-400 to-yellow-600',
-  'from-purple-400 to-purple-600',
-  'from-pink-400 to-pink-600',
-  'from-orange-400 to-orange-600',
-  'from-cyan-400 to-cyan-600',
+  { main: '#ef4444', shine: '#fca5a5', shadow: '#991b1b' },  // Red
+  { main: '#3b82f6', shine: '#93c5fd', shadow: '#1d4ed8' },  // Blue
+  { main: '#22c55e', shine: '#86efac', shadow: '#15803d' },  // Green
+  { main: '#eab308', shine: '#fde047', shadow: '#a16207' },  // Yellow
+  { main: '#a855f7', shine: '#d8b4fe', shadow: '#7e22ce' },  // Purple
+  { main: '#ec4899', shine: '#f9a8d4', shadow: '#be185d' },  // Pink
+  { main: '#f97316', shine: '#fdba74', shadow: '#c2410c' },  // Orange
+  { main: '#06b6d4', shine: '#67e8f9', shadow: '#0e7490' },  // Cyan
 ];
+
+// Individual chain link SVG component
+function ChainLink({ 
+  color, 
+  index, 
+  size 
+}: { 
+  color: { main: string; shine: string; shadow: string }; 
+  index: number;
+  size: 'sm' | 'md' | 'lg';
+}) {
+  const sizeMap = {
+    sm: { width: 20, height: 32, overlap: -10 },
+    md: { width: 28, height: 44, overlap: -14 },
+    lg: { width: 36, height: 56, overlap: -18 },
+  };
+  
+  const { width, height, overlap } = sizeMap[size];
+  const isEven = index % 2 === 0;
+  
+  return (
+    <motion.svg
+      width={width}
+      height={height}
+      viewBox="0 0 28 44"
+      style={{ 
+        marginLeft: index > 0 ? overlap : 0,
+        zIndex: isEven ? 2 : 1,
+        transform: isEven ? 'rotate(0deg)' : 'rotate(90deg) translateY(-8px)',
+      }}
+      initial={{ scale: 0, rotate: -180 }}
+      animate={{ scale: 1, rotate: isEven ? 0 : 90 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+    >
+      {/* Outer ring of chain link */}
+      <ellipse
+        cx="14"
+        cy="22"
+        rx="11"
+        ry="18"
+        fill="none"
+        stroke={color.shadow}
+        strokeWidth="6"
+      />
+      {/* Main body of chain link */}
+      <ellipse
+        cx="14"
+        cy="22"
+        rx="11"
+        ry="18"
+        fill="none"
+        stroke={color.main}
+        strokeWidth="4"
+      />
+      {/* Inner highlight */}
+      <ellipse
+        cx="14"
+        cy="22"
+        rx="8"
+        ry="15"
+        fill="none"
+        stroke={color.shine}
+        strokeWidth="1"
+        opacity="0.5"
+      />
+      {/* Top shine effect */}
+      <ellipse
+        cx="10"
+        cy="12"
+        rx="3"
+        ry="4"
+        fill={color.shine}
+        opacity="0.6"
+      />
+    </motion.svg>
+  );
+}
+
+// Interlocking chain visual
+function InterlockingChain({ 
+  length, 
+  colorIndex, 
+  size 
+}: { 
+  length: number; 
+  colorIndex: number; 
+  size: 'sm' | 'md' | 'lg';
+}) {
+  const color = chainColors[colorIndex % chainColors.length];
+  
+  return (
+    <div className="flex items-center justify-center" style={{ minHeight: size === 'lg' ? 60 : size === 'md' ? 48 : 36 }}>
+      {Array.from({ length }).map((_, i) => (
+        <ChainLink key={i} color={color} index={i} size={size} />
+      ))}
+    </div>
+  );
+}
 
 export function ChainDisplay({ 
   chain, 
@@ -27,12 +125,6 @@ export function ChainDisplay({
   onClick,
   size = 'md'
 }: ChainDisplayProps) {
-  const sizeMap = {
-    sm: { link: 'w-4 h-6', gap: '-ml-1' },
-    md: { link: 'w-6 h-9', gap: '-ml-1.5' },
-    lg: { link: 'w-8 h-12', gap: '-ml-2' },
-  };
-
   const colorIndex = (chain.length - 2) % chainColors.length;
 
   if (!isRevealed) {
@@ -52,34 +144,24 @@ export function ChainDisplay({
 
   return (
     <motion.div
-      className={`flex items-center p-3 rounded-xl bg-card/50 backdrop-blur-sm border-2 cursor-pointer transition-all ${
+      className={`flex flex-col items-center gap-2 p-4 rounded-xl bg-card/50 backdrop-blur-sm border-2 cursor-pointer transition-all ${
         isSelected 
           ? 'border-primary shadow-glow scale-105' 
-          : 'border-transparent hover:border-primary/50'
+          : 'border-transparent hover:border-primary/50 hover:bg-card/70'
       }`}
       onClick={onClick}
-      initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-      animate={{ opacity: 1, scale: isSelected ? 1.05 : 1, rotate: 0 }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: isSelected ? 1.05 : 1 }}
       transition={{ duration: 0.3 }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      {/* Chain links */}
-      <div className="flex items-center">
-        {Array.from({ length: chain.length }).map((_, i) => (
-          <div
-            key={i}
-            className={`${sizeMap[size].link} ${i > 0 ? sizeMap[size].gap : ''} bg-gradient-to-b ${chainColors[colorIndex]} rounded-full border-2 border-white/30 shadow-md`}
-            style={{
-              borderRadius: '40%',
-            }}
-          />
-        ))}
-      </div>
+      {/* Interlocking chain links */}
+      <InterlockingChain length={chain.length} colorIndex={colorIndex} size={size} />
       
       {/* Chain length badge */}
-      <div className="ml-3 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-display text-lg shadow-glow">
-        {chain.length}
+      <div className="flex items-center justify-center px-3 py-1 rounded-full bg-primary text-primary-foreground font-display text-lg shadow-glow">
+        {chain.length} links
       </div>
     </motion.div>
   );
