@@ -9,89 +9,82 @@ interface ChainDisplayProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const chainColors = [
-  { main: '#ef4444', shine: '#fca5a5', shadow: '#991b1b' },  // Red
-  { main: '#3b82f6', shine: '#93c5fd', shadow: '#1d4ed8' },  // Blue
-  { main: '#22c55e', shine: '#86efac', shadow: '#15803d' },  // Green
-  { main: '#eab308', shine: '#fde047', shadow: '#a16207' },  // Yellow
-  { main: '#a855f7', shine: '#d8b4fe', shadow: '#7e22ce' },  // Purple
-  { main: '#ec4899', shine: '#f9a8d4', shadow: '#be185d' },  // Pink
-  { main: '#f97316', shine: '#fdba74', shadow: '#c2410c' },  // Orange
-  { main: '#06b6d4', shine: '#67e8f9', shadow: '#0e7490' },  // Cyan
-];
+// Silver chain color
+const silverColor = { main: '#a8a8a8', shine: '#e8e8e8', shadow: '#5a5a5a' };
 
 // Individual chain link SVG component
 function ChainLink({ 
-  color, 
   index, 
   size 
 }: { 
-  color: { main: string; shine: string; shadow: string }; 
   index: number;
   size: 'sm' | 'md' | 'lg';
 }) {
   const sizeMap = {
-    sm: { width: 20, height: 32, overlap: -10 },
-    md: { width: 28, height: 44, overlap: -14 },
-    lg: { width: 36, height: 56, overlap: -18 },
+    sm: { width: 24, height: 36 },
+    md: { width: 32, height: 48 },
+    lg: { width: 40, height: 60 },
   };
   
-  const { width, height, overlap } = sizeMap[size];
+  const { width, height } = sizeMap[size];
   const isEven = index % 2 === 0;
+  
+  // Serpentine vertical offset for easier counting
+  const yOffset = isEven ? -4 : 4;
   
   return (
     <motion.svg
       width={width}
       height={height}
-      viewBox="0 0 28 44"
+      viewBox="0 0 32 48"
       style={{ 
-        marginLeft: index > 0 ? overlap : 0,
+        marginLeft: index > 0 ? -6 : 0,
+        marginTop: yOffset,
         zIndex: isEven ? 2 : 1,
-        transform: isEven ? 'rotate(0deg)' : 'rotate(90deg) translateY(-8px)',
       }}
       initial={{ scale: 0, rotate: -180 }}
       animate={{ scale: 1, rotate: isEven ? 0 : 90 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
+      transition={{ delay: index * 0.08, duration: 0.3 }}
     >
       {/* Outer ring of chain link */}
       <ellipse
-        cx="14"
-        cy="22"
-        rx="11"
-        ry="18"
+        cx="16"
+        cy="24"
+        rx="12"
+        ry="20"
         fill="none"
-        stroke={color.shadow}
-        strokeWidth="6"
+        stroke={silverColor.shadow}
+        strokeWidth="5"
       />
       {/* Main body of chain link */}
       <ellipse
-        cx="14"
-        cy="22"
-        rx="11"
-        ry="18"
+        cx="16"
+        cy="24"
+        rx="12"
+        ry="20"
         fill="none"
-        stroke={color.main}
-        strokeWidth="4"
+        stroke={silverColor.main}
+        strokeWidth="3"
       />
       {/* Inner highlight */}
       <ellipse
-        cx="14"
-        cy="22"
-        rx="8"
-        ry="15"
+        cx="16"
+        cy="24"
+        rx="9"
+        ry="16"
         fill="none"
-        stroke={color.shine}
-        strokeWidth="1"
-        opacity="0.5"
+        stroke={silverColor.shine}
+        strokeWidth="1.5"
+        opacity="0.6"
       />
       {/* Top shine effect */}
       <ellipse
-        cx="10"
-        cy="12"
+        cx="11"
+        cy="14"
         rx="3"
-        ry="4"
-        fill={color.shine}
-        opacity="0.6"
+        ry="5"
+        fill={silverColor.shine}
+        opacity="0.7"
       />
     </motion.svg>
   );
@@ -100,19 +93,15 @@ function ChainLink({
 // Interlocking chain visual
 function InterlockingChain({ 
   length, 
-  colorIndex, 
   size 
 }: { 
   length: number; 
-  colorIndex: number; 
   size: 'sm' | 'md' | 'lg';
 }) {
-  const color = chainColors[colorIndex % chainColors.length];
-  
   return (
-    <div className="flex items-center justify-center" style={{ minHeight: size === 'lg' ? 60 : size === 'md' ? 48 : 36 }}>
+    <div className="flex items-center justify-center" style={{ minHeight: size === 'lg' ? 70 : size === 'md' ? 56 : 44 }}>
       {Array.from({ length }).map((_, i) => (
-        <ChainLink key={i} color={color} index={i} size={size} />
+        <ChainLink key={i} index={i} size={size} />
       ))}
     </div>
   );
@@ -125,8 +114,6 @@ export function ChainDisplay({
   onClick,
   size = 'md'
 }: ChainDisplayProps) {
-  const colorIndex = (chain.length - 2) % chainColors.length;
-
   if (!isRevealed) {
     return (
       <motion.div
@@ -157,7 +144,7 @@ export function ChainDisplay({
       whileTap={{ scale: 0.95 }}
     >
       {/* Interlocking chain links */}
-      <InterlockingChain length={chain.length} colorIndex={colorIndex} size={size} />
+      <InterlockingChain length={chain.length} size={size} />
       
       {/* Chain length badge */}
       <div className="flex items-center justify-center px-3 py-1 rounded-full bg-primary text-primary-foreground font-display text-lg shadow-glow">
