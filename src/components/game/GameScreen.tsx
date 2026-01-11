@@ -285,11 +285,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
       <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-4 p-4">
         {/* Left panel - Chains */}
         <div className="flex flex-row lg:flex-col gap-4 lg:w-48">
-          <PickupBin 
-            remainingCount={gameState.pickupBin.length} 
-            onDraw={!isAITurn && gameState.phase === 'playing' ? drawChains : undefined}
-            isDisabled={isAITurn || gameState.phase !== 'playing'}
-          />
+          <PickupBin remainingCount={gameState.pickupBin.length} />
           <DiscardPile chains={gameState.discardPile} />
         </div>
 
