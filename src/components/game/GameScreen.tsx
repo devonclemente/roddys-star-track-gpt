@@ -9,6 +9,7 @@ import { ChainDisplay } from './ChainDisplay';
 import { PickupBin } from './PickupBin';
 import { DiscardPile } from './DiscardPile';
 import { PlayerTurnModal } from './PlayerTurnModal';
+import { SpecialSpaceModal } from './SpecialSpaceModal';
 import type { GameMode, AIDifficulty, Player, Chain, GameState } from '@/types/game';
 import { createInitialChains, shuffleArray } from '@/types/game';
 import { createBoardSpaces, findPreviousStar } from '@/lib/boardLayout';
@@ -25,6 +26,12 @@ interface GameScreenProps {
 export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEnd }: GameScreenProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [showTurnModal, setShowTurnModal] = useState(false);
+  const [specialSpaceModal, setSpecialSpaceModal] = useState<{
+    isVisible: boolean;
+    type: 'star' | 'numbered' | null;
+    value?: number;
+    pendingMovement?: { newPosition: number; opponentPosition: number; message: string };
+  }>({ isVisible: false, type: null });
   
   const [gameState, setGameState] = useState<GameState>(() => ({
     mode,
@@ -95,40 +102,13 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     }, 500);
   }, [gameState.drawnChains]);
 
-  // Resolve movement and special space effects
-  const resolveMovement = useCallback((spaces: number) => {
+  // Complete the movement after special space modal is confirmed
+  const completeMovement = useCallback((newPosition: number, opponentPosition: number, message: string) => {
     setGameState(prev => {
       const player = prev.players[prev.currentPlayer];
-      let newPosition = Math.min(player.position + spaces, endPosition);
-      const landedSpace = boardSpaces[newPosition];
-      let message = '';
       const opponent = prev.currentPlayer === 'red' ? 'blue' : 'red';
-      let opponentPosition = prev.players[opponent].position;
-
-      // Handle numbered space bonus
-      if (landedSpace.type === 'numbered' && landedSpace.value !== undefined) {
-        const bonus = landedSpace.value;
-        message = `Landed on ${bonus}! Moving ${bonus} more spaces.`;
-        newPosition = Math.min(newPosition + bonus, endPosition);
-      }
-
-      // Handle star space penalty
-      if (landedSpace.type === 'star') {
-        const previousStar = findPreviousStar(boardSpaces, newPosition);
-        message = 'Landed on a star! Going back...';
-        newPosition = previousStar;
-      }
-
-      // Handle bumping opponent
-      if (newPosition === opponentPosition && newPosition > 0 && newPosition < endPosition) {
-        opponentPosition = Math.max(0, opponentPosition - 2);
-        message = 'Bump! Opponent goes back 2 spaces!';
-      }
-
-      // Check for game end
       const reachedEnd = newPosition >= endPosition;
       
-      // Add selected chain to discard
       const newDiscardPile = prev.selectedChain 
         ? [...prev.discardPile, prev.selectedChain]
         : prev.discardPile;
@@ -148,11 +128,68 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
       };
     });
 
-    // Switch turns after a delay
     setTimeout(() => {
       endTurn();
-    }, 1000);
-  }, [boardSpaces, endPosition]);
+    }, 800);
+  }, [endPosition]);
+
+  // Handle special space modal confirmation
+  const handleSpecialSpaceConfirm = useCallback(() => {
+    const { pendingMovement } = specialSpaceModal;
+    setSpecialSpaceModal({ isVisible: false, type: null });
+    
+    if (pendingMovement) {
+      completeMovement(pendingMovement.newPosition, pendingMovement.opponentPosition, pendingMovement.message);
+    }
+  }, [specialSpaceModal, completeMovement]);
+
+  // Resolve movement and special space effects
+  const resolveMovement = useCallback((spaces: number) => {
+    const player = gameState.players[gameState.currentPlayer];
+    let newPosition = Math.min(player.position + spaces, endPosition);
+    const landedSpace = boardSpaces[newPosition];
+    let message = '';
+    const opponent = gameState.currentPlayer === 'red' ? 'blue' : 'red';
+    let opponentPosition = gameState.players[opponent].position;
+
+    // Check for special spaces first (before calculating final position)
+    if (landedSpace.type === 'numbered' && landedSpace.value !== undefined) {
+      const bonus = landedSpace.value;
+      const finalPosition = Math.min(newPosition + bonus, endPosition);
+      message = `Bonus! Moving ${bonus} more!`;
+      
+      // Show modal, then complete movement
+      setSpecialSpaceModal({
+        isVisible: true,
+        type: 'numbered',
+        value: bonus,
+        pendingMovement: { newPosition: finalPosition, opponentPosition, message },
+      });
+      return;
+    }
+
+    if (landedSpace.type === 'star') {
+      const previousStar = findPreviousStar(boardSpaces, newPosition);
+      message = 'Star! Going back!';
+      
+      // Show modal, then complete movement
+      setSpecialSpaceModal({
+        isVisible: true,
+        type: 'star',
+        pendingMovement: { newPosition: previousStar, opponentPosition, message },
+      });
+      return;
+    }
+
+    // Handle bumping opponent (no modal needed)
+    if (newPosition === opponentPosition && newPosition > 0 && newPosition < endPosition) {
+      opponentPosition = Math.max(0, opponentPosition - 2);
+      message = 'Bump! Opponent goes back 2 spaces!';
+    }
+
+    // No special space - complete movement immediately
+    completeMovement(newPosition, opponentPosition, message);
+  }, [gameState.players, gameState.currentPlayer, boardSpaces, endPosition, completeMovement]);
 
   // End turn and switch players
   const endTurn = useCallback(() => {
@@ -311,6 +348,14 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
         player={gameState.currentPlayer}
         isVisible={showTurnModal}
         onDismiss={() => setShowTurnModal(false)}
+      />
+
+      {/* Special space modal */}
+      <SpecialSpaceModal
+        isVisible={specialSpaceModal.isVisible}
+        type={specialSpaceModal.type}
+        value={specialSpaceModal.value}
+        onConfirm={handleSpecialSpaceConfirm}
       />
     </div>
   );
