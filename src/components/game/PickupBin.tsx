@@ -2,19 +2,14 @@ import { motion } from 'framer-motion';
 
 interface PickupBinProps {
   remainingCount: number;
-  onDraw?: () => void;
-  isDisabled?: boolean;
 }
 
-export function PickupBin({ remainingCount, onDraw, isDisabled = false }: PickupBinProps) {
+export function PickupBin({ remainingCount }: PickupBinProps) {
   return (
     <motion.div
-      className={`relative flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted transition-all ${
-        !isDisabled ? 'cursor-pointer hover:border-primary hover:shadow-glow' : 'opacity-60'
-      }`}
-      onClick={!isDisabled ? onDraw : undefined}
-      whileHover={!isDisabled ? { scale: 1.02 } : {}}
-      whileTap={!isDisabled ? { scale: 0.98 } : {}}
+      className="relative flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
     >
       {/* Mystery container visual */}
       <div className="relative w-20 h-16 bg-gradient-to-b from-muted to-space-deep rounded-xl border-4 border-muted-foreground/30 overflow-hidden">
