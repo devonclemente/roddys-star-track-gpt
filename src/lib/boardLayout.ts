@@ -25,12 +25,12 @@ export function createBoardSpaces(): BoardSpace[] {
     { type: 'numbered', value: 3 }, // 14
     { type: 'normal' },          // 15
     { type: 'normal' },          // 16
-    { type: 'numbered', value: 0 }, // 17
+    { type: 'numbered', value: 8 }, // 17
     { type: 'normal' },          // 18
     { type: 'numbered', value: 6 }, // 19
     { type: 'star' },            // 20: Third star
     { type: 'normal' },          // 21
-    { type: 'numbered', value: 0 }, // 22
+    { type: 'numbered', value: 8 }, // 22
     { type: 'normal' },          // 23
     { type: 'numbered', value: 3 }, // 24
     { type: 'star' },            // 25: Fourth star
