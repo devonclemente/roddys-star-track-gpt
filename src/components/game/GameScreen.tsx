@@ -33,6 +33,10 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     pendingMovement?: { newPosition: number; opponentPosition: number; message: string };
   }>({ isVisible: false, type: null });
   
+  // Track if a player has reached the end (for final turn logic)
+  const [firstFinisher, setFirstFinisher] = useState<Player | null>(null);
+  const [finalTurnTaken, setFinalTurnTaken] = useState(false);
+
   const [gameState, setGameState] = useState<GameState>(() => ({
     mode,
     aiDifficulty: difficulty,
@@ -122,16 +126,21 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
         },
         selectedChain: null,
         discardPile: newDiscardPile,
-        phase: reachedEnd ? 'ended' : 'playing',
-        winner: reachedEnd ? prev.currentPlayer : null,
+        phase: 'playing', // Keep playing until we determine winner
         message: message || 'Turn complete!',
       };
     });
 
+    // Track if current player reached the end
+    const reachedEnd = newPosition >= endPosition;
+    if (reachedEnd && !firstFinisher) {
+      setFirstFinisher(gameState.currentPlayer);
+    }
+
     setTimeout(() => {
-      endTurn();
+      endTurn(newPosition >= endPosition);
     }, 800);
-  }, [endPosition]);
+  }, [endPosition, firstFinisher, gameState.currentPlayer]);
 
   // Handle special space modal confirmation
   const handleSpecialSpaceConfirm = useCallback(() => {
@@ -191,23 +200,59 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     completeMovement(newPosition, opponentPosition, message);
   }, [gameState.players, gameState.currentPlayer, boardSpaces, endPosition, completeMovement]);
 
-  // End turn and switch players
-  const endTurn = useCallback(() => {
-    setGameState(prev => {
-      if (prev.winner) {
-        // Game is over
-        onGameEnd(prev.winner);
-        return prev;
+  // End turn and switch players (or determine winner)
+  const endTurn = useCallback((currentPlayerReachedEnd: boolean = false) => {
+    // Determine if we should end the game
+    const shouldEndGame = () => {
+      // If the first finisher just finished and it's not a final turn scenario yet
+      if (currentPlayerReachedEnd && !firstFinisher) {
+        // First player just reached the end - other player gets final turn
+        return false;
       }
+      // If someone finished before and this is the final turn
+      if (firstFinisher) {
+        setFinalTurnTaken(true);
+        return true;
+      }
+      return false;
+    };
 
+    if (shouldEndGame()) {
+      // Determine winner based on positions
+      setGameState(prev => {
+        const redPos = prev.players.red.position;
+        const bluePos = prev.players.blue.position;
+        
+        let winner: Player | 'tie';
+        if (redPos === bluePos) {
+          winner = 'tie';
+        } else if (redPos > bluePos) {
+          winner = 'red';
+        } else {
+          winner = 'blue';
+        }
+        
+        onGameEnd(winner);
+        return { ...prev, phase: 'ended', winner };
+      });
+      return;
+    }
+
+    setGameState(prev => {
       const nextPlayer = prev.currentPlayer === 'red' ? 'blue' : 'red';
       const nextPlayerState = prev.players[nextPlayer];
+      
+      // Check if this was the first player to reach the end
+      const justReachedEnd = currentPlayerReachedEnd && !firstFinisher;
+      const finalTurnMessage = justReachedEnd 
+        ? `${nextPlayer === 'red' ? 'Red' : 'Blue'} gets one final turn!`
+        : nextPlayerState.isAI ? 'Computer is thinking...' : 'Tap "Take Turn" to draw chains!';
       
       return {
         ...prev,
         currentPlayer: nextPlayer,
         phase: 'playing',
-        message: nextPlayerState.isAI ? 'Computer is thinking...' : 'Tap "Take Turn" to draw chains!',
+        message: finalTurnMessage,
       };
     });
 
@@ -215,7 +260,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     if (mode === 'two-player') {
       setShowTurnModal(true);
     }
-  }, [mode, onGameEnd]);
+  }, [mode, onGameEnd, firstFinisher]);
 
   // AI turn logic
   useEffect(() => {
