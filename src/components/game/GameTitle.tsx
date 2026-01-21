@@ -37,67 +37,19 @@ export function GameTitle({ size = 'lg', showRocket = false }: GameTitleProps) {
             className={`${rocketSizeClasses[size]} text-primary drop-shadow-[0_0_15px_hsl(var(--primary)/0.8)] rotate-45`}
             strokeWidth={1.5}
           />
-          {/* Main engine trail */}
+          {/* Rocket trail effect */}
           <motion.div
-            className="absolute -left-6 top-1/2 -translate-y-1/2 w-8 h-1.5 bg-gradient-to-l from-primary via-primary/60 to-transparent rounded-full"
+            className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-1 bg-gradient-to-l from-primary/80 to-transparent rounded-full"
             animate={{ 
-              opacity: [0.6, 1, 0.6],
-              scaleX: [0.8, 1.3, 0.8]
+              opacity: [0.5, 1, 0.5],
+              scaleX: [0.8, 1.2, 0.8]
             }}
             transition={{ 
-              duration: 0.8, 
+              duration: 1.5, 
               repeat: Infinity,
               ease: "easeInOut"
             }}
           />
-          {/* Particle stars trail */}
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-primary"
-              style={{
-                width: size === 'lg' ? 4 : size === 'md' ? 3 : 2,
-                height: size === 'lg' ? 4 : size === 'md' ? 3 : 2,
-                left: -12 - (i * 8),
-                top: '50%',
-              }}
-              animate={{
-                opacity: [0, 0.9, 0],
-                scale: [0.5, 1, 0.3],
-                y: [0, (i % 2 === 0 ? -6 : 6), 0],
-                x: [-5, 5, -5],
-              }}
-              transition={{
-                duration: 1.2 + (i * 0.15),
-                repeat: Infinity,
-                delay: i * 0.12,
-                ease: "easeInOut"
-              }}
-            />
-          ))}
-          {/* Sparkle effects */}
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={`sparkle-${i}`}
-              className="absolute"
-              style={{
-                left: -20 - (i * 12),
-                top: '50%',
-              }}
-              animate={{
-                opacity: [0, 1, 0],
-                scale: [0, 1, 0],
-              }}
-              transition={{
-                duration: 0.8,
-                repeat: Infinity,
-                delay: i * 0.25,
-                ease: "easeOut"
-              }}
-            >
-              <div className="w-1 h-1 bg-yellow-300 rounded-full shadow-[0_0_6px_2px_hsl(var(--primary)/0.6)]" />
-            </motion.div>
-          ))}
         </motion.div>
       )}
       <h1
