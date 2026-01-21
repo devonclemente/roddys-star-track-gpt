@@ -331,7 +331,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-4">
-        <GameTitle size="sm" />
+        <GameTitle size="sm" showRocket />
         
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)}>
