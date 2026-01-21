@@ -347,7 +347,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
       </header>
 
       {/* Main game area */}
-      <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-4 p-4">
+      <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-4 p-4 pt-0">
         {/* Left panel - Chains */}
         <div className="flex flex-row lg:flex-col gap-4 lg:w-48">
           <PickupBin remainingCount={gameState.pickupBin.length} />
@@ -355,7 +355,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
         </div>
 
         {/* Center - Game board */}
-        <div className="flex-1 flex flex-col items-center gap-4">
+        <div className="flex-1 flex flex-col items-center gap-2">
           <TurnIndicator 
             currentPlayer={gameState.currentPlayer} 
             isAI={isAITurn}
