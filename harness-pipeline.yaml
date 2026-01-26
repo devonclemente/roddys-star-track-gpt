@@ -1,0 +1,158 @@
+pipeline:
+  orgIdentifier: default
+  projectIdentifier: Security_Test_Protocols
+  properties:
+    ci:
+      codebase:
+        build: <+input>
+        connectorRef: account.DevonGitHub
+        repoName: devonclemente/roddys-star-track-gpt
+  stages:
+    - stage:
+        identifier: build1
+        name: build
+        type: CI
+        spec:
+          caching:
+            enabled: true
+            paths:
+              - /root/.npm
+            key: npm-<+checksum("package-lock.json")>
+            failOnCacheMiss: false
+          sharedPaths:
+            - /root/.npm
+          cloneCodebase: true
+          execution:
+            steps:
+              - step:
+                  identifier: setup_node
+                  name: setup node 20
+                  type: Run
+                  spec:
+                    shell: Sh
+                    command: |-
+                      set -eu
+
+                      NODE_VERSION="20.11.1"
+                      INSTALL_DIR="$HOME/.local/node"
+
+                      echo "Installing Node $NODE_VERSION to $INSTALL_DIR"
+
+                      curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o node.tar.xz
+                      mkdir -p "$INSTALL_DIR"
+                      tar -xJf node.tar.xz -C "$INSTALL_DIR" --strip-components=1
+
+                      export PATH="$INSTALL_DIR/bin:$PATH"
+
+                      node -v
+                      npm -v
+              - step:
+                  identifier: installdependencies
+                  name: install dependencies
+                  type: Run
+                  spec:
+                    shell: Sh
+                    command: |-
+                      set -eu
+                      export PATH="$HOME/.local/node/bin:$PATH"
+                      node -v
+                      npm ci
+              - step:
+                  identifier: lint
+                  name: lint non-blocking
+                  type: Run
+                  spec:
+                    shell: Sh
+                    command: |-
+                      set -eu
+                      export PATH="$HOME/.local/node/bin:$PATH"
+                      npm run lint || true
+              - step:
+                  identifier: test
+                  name: run tests
+                  type: Run
+                  spec:
+                    shell: Sh
+                    command: |-
+                      set -eu
+                      export PATH="$HOME/.local/node/bin:$PATH"
+                      mkdir -p reports
+                      npm run test
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - reports/junit.xml
+              - step:
+                  identifier: build
+                  name: build
+                  type: Run
+                  spec:
+                    shell: Sh
+                    command: |-
+                      set -eu
+                      export PATH="$HOME/.local/node/bin:$PATH"
+                      npm run build
+              - parallel:
+                  - step:
+                      type: Owasp
+                      name: Owasp_Scan
+                      identifier: Owasp_1
+                      spec:
+                        mode: orchestration
+                        config: default
+                        target:
+                          type: repository
+                          detection: auto
+                        advanced:
+                          log:
+                            level: info
+                          fail_on_severity: medium
+                          args:
+                            cli: "--disableRubygems --disableBundleAudit --disableOssIndex --exclude '**/node_modules/**' --exclude '**/.git/**'"
+                  - step:
+                      type: OsvScanner
+                      name: OsvScanner
+                      identifier: OsvScanner_1
+                      spec:
+                        mode: orchestration
+                        config: default
+                        target:
+                          type: repository
+                          detection: auto
+                        advanced:
+                          log:
+                            level: info
+                          fail_on_severity: medium
+                  - step:
+                      type: Semgrep
+                      name: Semgrep_1
+                      identifier: Semgrep_1
+                      spec:
+                        mode: orchestration
+                        config: default
+                        target:
+                          type: repository
+                          detection: auto
+                        advanced:
+                          log:
+                            level: info
+                          fail_on_severity: medium
+            rollbackSteps: []
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          buildIntelligence:
+            enabled: true
+        description: ""
+  tags:
+    ai_generated: "true"
+  identifier: Build_and_Secure_StarTrack
+  description: |-
+    explicit Node 20 install. 
+
+    open scanners
+  name: Build and Secure StarTrack GPT
