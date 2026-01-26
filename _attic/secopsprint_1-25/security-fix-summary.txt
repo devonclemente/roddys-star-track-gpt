@@ -1,0 +1,23 @@
+Security Fix Summary - 2026-01-25
+=================================
+
+Issue: CWE-79 XSS vulnerability in ChartStyle component
+File: src/components/ui/chart.tsx
+Severity: Medium
+
+Problem:
+- dangerouslySetInnerHTML used to inject CSS styles
+- Bypassed React's built-in XSS protections
+
+Fix (2 commits):
+
+1. 4e312f1 - Added input sanitization functions:
+   - sanitizeCSSIdentifier(): whitelist alphanumeric, hyphens, underscores
+   - sanitizeCSSColor(): validate against safe CSS color patterns (hex, rgb, hsl, named colors, CSS vars)
+
+2. 0351559 - Eliminated dangerouslySetInnerHTML entirely:
+   - Refactored ChartStyle to use ref + useEffect
+   - Sets style.textContent instead of innerHTML
+   - Maintains sanitization as defense-in-depth
+
+Branch: dev
