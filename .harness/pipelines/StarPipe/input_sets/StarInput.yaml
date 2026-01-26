@@ -1,0 +1,14 @@
+inputSet:
+  name: StarInput
+  identifier: StarInput
+  orgIdentifier: default
+  projectIdentifier: Security_Test_Protocols
+  pipeline:
+    identifier: StarPipe
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: <+trigger.branch>
