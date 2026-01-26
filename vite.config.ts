@@ -15,4 +15,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {
+    reporters: ["default", "junit"],
+    outputFile: {
+      junit: "reports/junit.xml",
+    },
+  },
 }));
