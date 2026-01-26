@@ -1,12 +1,10 @@
 import { motion } from 'framer-motion';
-import type { BoardSpace, Player } from '@/types/game';
+import type { BoardSpace } from '@/types/game';
 import { Star } from 'lucide-react';
 
 interface HexSpaceProps {
   space: BoardSpace;
   isHighlighted?: boolean;
-  hasRedPawn?: boolean;
-  hasBluePawn?: boolean;
   size?: number;
   onClick?: () => void;
 }
@@ -14,8 +12,6 @@ interface HexSpaceProps {
 export function HexSpace({ 
   space, 
   isHighlighted = false,
-  hasRedPawn = false,
-  hasBluePawn = false,
   size = 48,
   onClick
 }: HexSpaceProps) {
@@ -71,32 +67,6 @@ export function HexSpace({
           <span className="font-display text-xs text-primary-foreground">END</span>
         )}
       </div>
-
-      {/* Pawns */}
-      {(hasRedPawn || hasBluePawn) && (
-        <div className="absolute inset-0 flex items-center justify-center gap-0.5 pointer-events-none">
-          {hasRedPawn && <Pawn color="red" />}
-          {hasBluePawn && <Pawn color="blue" />}
-        </div>
-      )}
     </motion.div>
-  );
-}
-
-function Pawn({ color }: { color: Player }) {
-  return (
-    <motion.div
-      className={`w-5 h-7 rounded-full ${
-        color === 'red' 
-          ? 'bg-gradient-to-b from-red-400 to-red-600' 
-          : 'bg-gradient-to-b from-blue-400 to-blue-600'
-      } shadow-pawn border-2 border-white/30`}
-      style={{
-        clipPath: 'polygon(20% 0%, 80% 0%, 100% 30%, 100% 100%, 0% 100%, 0% 30%)',
-      }}
-      initial={{ scale: 0, y: -20 }}
-      animate={{ scale: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-    />
   );
 }

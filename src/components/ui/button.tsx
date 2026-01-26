@@ -17,6 +17,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         cosmic: "bg-gradient-to-r from-primary to-space-orange text-primary-foreground shadow-glow hover:shadow-[0_0_50px_hsl(var(--primary)/0.7)] hover:scale-105 active:scale-95",
         play: "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-[0_0_30px_hsl(140_70%_40%/0.5)] hover:shadow-[0_0_50px_hsl(140_70%_40%/0.7)] hover:scale-105 active:scale-95",
+        playPulse: "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-[0_0_30px_hsl(140_70%_40%/0.5)] hover:shadow-[0_0_50px_hsl(140_70%_40%/0.7)] hover:scale-105 active:scale-95 animate-button-pulse",
         danger: "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-[0_0_30px_hsl(0_70%_50%/0.5)] hover:shadow-[0_0_50px_hsl(0_70%_50%/0.7)] hover:scale-105 active:scale-95",
       },
       size: {
