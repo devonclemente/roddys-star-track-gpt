@@ -13,15 +13,15 @@ export function DiscardPile({ chains }: DiscardPileProps) {
   }, new Map<number, number>());
 
   return (
-    <div className="flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted">
+    <div className="flex flex-col items-center p-5 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted w-44 h-36">
       <p className="text-sm font-body text-muted-foreground mb-2">Discard Pile</p>
       
       {chains.length === 0 ? (
-        <div className="w-20 h-16 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+        <div className="w-24 h-20 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
           <span className="text-xs text-muted-foreground">Empty</span>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1 justify-center max-w-32">
+        <div className="flex flex-wrap gap-1 justify-center max-w-36">
           <AnimatePresence>
             {Array.from(chainsByLength.entries())
               .sort(([a], [b]) => b - a)
@@ -42,7 +42,7 @@ export function DiscardPile({ chains }: DiscardPileProps) {
       )}
       
       {/* Total count */}
-      <p className="mt-2 text-xs text-muted-foreground">
+      <p className="mt-auto text-xs text-muted-foreground">
         {chains.length} used
       </p>
     </div>
