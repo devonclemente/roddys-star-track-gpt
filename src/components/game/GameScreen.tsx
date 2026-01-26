@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameBoard } from './GameBoard';
@@ -9,11 +9,11 @@ import { ChainDisplay } from './ChainDisplay';
 import { PickupBin } from './PickupBin';
 import { DiscardPile } from './DiscardPile';
 import { PlayerTurnModal } from './PlayerTurnModal';
-import { SpecialSpaceModal } from './SpecialSpaceModal';
 import { RebuttalTurnModal } from './RebuttalTurnModal';
-import type { GameMode, AIDifficulty, Player, Chain, GameState } from '@/types/game';
-import { createInitialChains, shuffleArray } from '@/types/game';
-import { createBoardSpaces, findPreviousStar } from '@/lib/boardLayout';
+import { EffectModal } from './EffectModal';
+import { useGameLogic, type EffectEvent, type MovementResult } from '@/hooks/useGameLogic';
+import { useMovementAnimation, generateMovementSteps, type MovementStep } from '@/hooks/useMovementAnimation';
+import type { GameMode, AIDifficulty, Player, Chain } from '@/types/game';
 import { Home, Volume2, VolumeX, BookOpen } from 'lucide-react';
 
 interface GameScreenProps {
@@ -24,312 +24,245 @@ interface GameScreenProps {
   onGameEnd: (winner: Player | 'tie') => void;
 }
 
-// Safe player accessor to avoid bracket notation
-const getPlayerState = <T extends { red: unknown; blue: unknown }>(
-  players: T,
-  player: Player
-): T['red'] => (player === 'red' ? players.red : players.blue);
+const STEP_DELAY = 250; // ms per step
+const EFFECT_PAUSE = 600; // ms pause before showing effect
 
 export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEnd }: GameScreenProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [showTurnModal, setShowTurnModal] = useState(false);
-  const [specialSpaceModal, setSpecialSpaceModal] = useState<{
-    isVisible: boolean;
-    type: 'star' | 'numbered' | null;
-    value?: number;
-    pendingMovement?: { newPosition: number; opponentPosition: number; message: string };
-  }>({ isVisible: false, type: null });
-  
-  // Track if a player has reached the end (for final turn logic)
-  const [firstFinisher, setFirstFinisher] = useState<Player | null>(null);
-  const [finalTurnTaken, setFinalTurnTaken] = useState(false);
   const [showRebuttalModal, setShowRebuttalModal] = useState(false);
+  
+  // Effect modal state
+  const [currentEffect, setCurrentEffect] = useState<EffectEvent | null>(null);
+  const [showEffectModal, setShowEffectModal] = useState(false);
+  
+  // Display positions for animated pawns (separate from logical positions)
+  const [displayPositions, setDisplayPositions] = useState({ red: 0, blue: 0 });
+  const [animatingPlayer, setAnimatingPlayer] = useState<Player | null>(null);
+  
+  // Animation queue for sequential effects
+  const animationQueueRef = useRef<{
+    steps: MovementStep[];
+    effects: EffectEvent[];
+    result: MovementResult;
+  } | null>(null);
+  const effectIndexRef = useRef(0);
+  const stepIndexRef = useRef(0);
 
-  const [gameState, setGameState] = useState<GameState>(() => ({
-    mode,
-    aiDifficulty: difficulty,
-    currentPlayer: 'red',
-    players: {
-      red: { color: 'red', position: 0, isAI: false },
-      blue: { color: 'blue', position: 0, isAI: mode === 'vs-ai' },
-    },
-    pickupBin: createInitialChains(),
-    discardPile: [],
-    drawnChains: null,
-    selectedChain: null,
-    phase: 'playing',
-    winner: null,
-    message: 'Tap "Take Turn" to draw chains!',
-    isAnimating: false,
-  }));
+  const {
+    gameState,
+    boardSpaces,
+    isAITurn,
+    firstFinisher,
+    drawChains,
+    selectChain,
+    completeMovement,
+    endTurn,
+    confirmRebuttal,
+    getAIChoice,
+  } = useGameLogic({ mode, difficulty, onGameEnd });
 
-  const currentPlayerState = getPlayerState(gameState.players, gameState.currentPlayer);
-  const isAITurn = currentPlayerState.isAI;
-  const boardSpaces = createBoardSpaces();
-  const endPosition = boardSpaces.length - 1;
-
-  // Draw two chains from the pickup bin
-  const drawChains = useCallback(() => {
-    if (gameState.pickupBin.length < 2) {
-      // Reshuffle discard pile into pickup bin
-      setGameState(prev => ({
-        ...prev,
-        pickupBin: shuffleArray([...prev.discardPile]),
-        discardPile: [],
-        message: 'Reshuffling the chains...',
-      }));
-      return;
-    }
-
-    const newBin = [...gameState.pickupBin];
-    const chain1 = newBin.pop()!;
-    const chain2 = newBin.pop()!;
-
-    setGameState(prev => ({
-      ...prev,
-      pickupBin: newBin,
-      drawnChains: [chain1, chain2],
-      phase: 'selecting',
-      message: 'Choose a chain!',
-    }));
-  }, [gameState.pickupBin]);
-
-  // Select a chain and move
-  const selectChain = useCallback((chain: Chain) => {
-    const otherChain = gameState.drawnChains?.find(c => c.id !== chain.id);
-    
-    setGameState(prev => ({
-      ...prev,
-      selectedChain: chain,
-      drawnChains: null,
-      phase: 'moving',
-      message: `Moving ${chain.length} spaces...`,
-      // Put the unselected chain back in the bin
-      pickupBin: otherChain ? [...prev.pickupBin, otherChain] : prev.pickupBin,
-    }));
-
-    // Simulate movement animation then resolve
-    setTimeout(() => {
-      resolveMovement(chain.length);
-    }, 500);
-  }, [gameState.drawnChains]);
-
-  // Track pending turn end
-  const [pendingTurnEnd, setPendingTurnEnd] = useState<{ reachedEnd: boolean } | null>(null);
-
-  // Complete the movement after special space modal is confirmed
-  const completeMovement = useCallback((newPosition: number, opponentPosition: number, message: string) => {
-    setGameState(prev => {
-      const player = getPlayerState(prev.players, prev.currentPlayer);
-      const opponent = prev.currentPlayer === 'red' ? 'blue' : 'red';
-      
-      const newDiscardPile = prev.selectedChain 
-        ? [...prev.discardPile, prev.selectedChain]
-        : prev.discardPile;
-
-      return {
-        ...prev,
-        players: {
-          ...prev.players,
-          [prev.currentPlayer]: { ...player, position: newPosition },
-          [opponent]: { ...prev.players[opponent], position: opponentPosition },
-        },
-        selectedChain: null,
-        discardPile: newDiscardPile,
-        phase: 'playing',
-        message: message || 'Turn complete!',
-      };
-    });
-
-    // Schedule turn end
-    setTimeout(() => {
-      setPendingTurnEnd({ reachedEnd: newPosition >= endPosition });
-    }, 800);
-  }, [endPosition]);
-
-  // Handle special space modal confirmation
-  const handleSpecialSpaceConfirm = useCallback(() => {
-    const { pendingMovement } = specialSpaceModal;
-    setSpecialSpaceModal({ isVisible: false, type: null });
-    
-    if (pendingMovement) {
-      completeMovement(pendingMovement.newPosition, pendingMovement.opponentPosition, pendingMovement.message);
-    }
-  }, [specialSpaceModal, completeMovement]);
-
-  // Resolve movement and special space effects
-  const resolveMovement = useCallback((spaces: number) => {
-    const player = getPlayerState(gameState.players, gameState.currentPlayer);
-    let newPosition = Math.min(player.position + spaces, endPosition);
-    const landedSpace = boardSpaces[newPosition];
-    let message = '';
-    const opponent = gameState.currentPlayer === 'red' ? 'blue' : 'red';
-    let opponentPosition = gameState.players[opponent].position;
-
-    // Check for special spaces first (before calculating final position)
-    if (landedSpace.type === 'numbered' && landedSpace.value !== undefined) {
-      const bonus = landedSpace.value;
-      const finalPosition = Math.min(newPosition + bonus, endPosition);
-      message = `Bonus! Moving ${bonus} more!`;
-      
-      // Show modal, then complete movement
-      setSpecialSpaceModal({
-        isVisible: true,
-        type: 'numbered',
-        value: bonus,
-        pendingMovement: { newPosition: finalPosition, opponentPosition, message },
+  // Sync display positions with game state when not animating
+  useEffect(() => {
+    if (!animatingPlayer) {
+      setDisplayPositions({
+        red: gameState.players.red.position,
+        blue: gameState.players.blue.position,
       });
+    }
+  }, [gameState.players.red.position, gameState.players.blue.position, animatingPlayer]);
+
+  // Animate pawn step by step
+  const animateSteps = useCallback((
+    player: Player,
+    steps: MovementStep[],
+    startIndex: number,
+    onComplete: () => void
+  ) => {
+    if (startIndex >= steps.length) {
+      onComplete();
       return;
     }
 
-    if (landedSpace.type === 'star') {
-      const previousStar = findPreviousStar(boardSpaces, newPosition);
-      message = 'Star! Going back!';
+    const step = steps[startIndex];
+    if (!step) {
+      onComplete();
+      return;
+    }
+
+    setAnimatingPlayer(player);
+    setDisplayPositions(prev => 
+      player === 'red' 
+        ? { ...prev, red: step.position }
+        : { ...prev, blue: step.position }
+    );
+
+    setTimeout(() => {
+      animateSteps(player, steps, startIndex + 1, onComplete);
+    }, STEP_DELAY);
+  }, []);
+
+  // Process the next effect in the queue
+  const processNextEffect = useCallback(() => {
+    const queue = animationQueueRef.current;
+    if (!queue) return;
+
+    const effectIdx = effectIndexRef.current;
+    
+    if (effectIdx >= queue.effects.length) {
+      // All effects processed - complete the movement
+      setAnimatingPlayer(null);
+      const reachedEnd = completeMovement(queue.result);
+      animationQueueRef.current = null;
       
-      // Show modal, then complete movement
-      setSpecialSpaceModal({
-        isVisible: true,
-        type: 'star',
-        pendingMovement: { newPosition: previousStar, opponentPosition, message },
-      });
+      // Schedule turn end
+      setTimeout(() => {
+        const turnResult = endTurn(reachedEnd);
+        
+        if (turnResult.type === 'rebuttal') {
+          setShowRebuttalModal(true);
+        } else if (turnResult.type === 'continue' && mode === 'two-player' && !turnResult.isAI) {
+          setShowTurnModal(true);
+        }
+      }, 500);
       return;
     }
 
-    // Handle bumping opponent (no modal needed)
-    if (newPosition === opponentPosition && newPosition > 0 && newPosition < endPosition) {
-      opponentPosition = Math.max(0, opponentPosition - 2);
-      message = 'Bump! Opponent goes back 2 spaces!';
+    // Show the current effect
+    const effect = queue.effects[effectIdx];
+    if (!effect) return;
+    
+    setCurrentEffect(effect);
+    setShowEffectModal(true);
+  }, [completeMovement, endTurn, mode]);
+
+  // Handle effect modal confirmation
+  const handleEffectConfirm = useCallback(() => {
+    setShowEffectModal(false);
+    setCurrentEffect(null);
+    
+    const queue = animationQueueRef.current;
+    if (!queue) return;
+
+    const currentEffectIdx = effectIndexRef.current;
+    const effect = queue.effects[currentEffectIdx];
+    
+    // Calculate which steps to animate for this effect
+    // We need to find the steps that correspond to this effect
+    const currentStepIdx = stepIndexRef.current;
+    
+    // Find steps that match this effect type
+    let stepsForEffect: MovementStep[] = [];
+    let newStepIdx = currentStepIdx;
+    
+    for (let i = currentStepIdx; i < queue.steps.length; i++) {
+      const step = queue.steps[i];
+      if (!step) break;
+      
+      // Check if this step is part of the current effect
+      if (
+        (effect.type === 'special-numbered' && step.type === 'special-numbered') ||
+        (effect.type === 'special-star' && step.type === 'special-star') ||
+        (effect.type === 'bump')
+      ) {
+        stepsForEffect.push(step);
+        newStepIdx = i + 1;
+      } else if (stepsForEffect.length > 0) {
+        // We've finished collecting steps for this effect
+        break;
+      }
     }
 
-    // No special space - complete movement immediately
-    completeMovement(newPosition, opponentPosition, message);
-  }, [gameState.players, gameState.currentPlayer, boardSpaces, endPosition, completeMovement]);
+    stepIndexRef.current = newStepIdx;
+    effectIndexRef.current = currentEffectIdx + 1;
+
+    // Animate these steps if any
+    if (stepsForEffect.length > 0) {
+      animateSteps(gameState.currentPlayer, stepsForEffect, 0, () => {
+        setTimeout(processNextEffect, EFFECT_PAUSE);
+      });
+    } else {
+      // No steps for this effect (like bump), just continue
+      setTimeout(processNextEffect, 200);
+    }
+  }, [animateSteps, gameState.currentPlayer, processNextEffect]);
+
+  // Start the movement animation sequence
+  const startMovementSequence = useCallback((result: MovementResult) => {
+    // Find where initial movement ends (before special space effects)
+    let initialEndIdx = 0;
+    for (let i = 0; i < result.steps.length; i++) {
+      const step = result.steps[i];
+      if (step?.type === 'move') {
+        initialEndIdx = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    const initialSteps = result.steps.slice(0, initialEndIdx);
+    
+    // Store the queue for effect processing
+    animationQueueRef.current = {
+      steps: result.steps,
+      effects: result.effects,
+      result,
+    };
+    effectIndexRef.current = 0;
+    stepIndexRef.current = initialEndIdx;
+
+    // Animate initial movement
+    if (initialSteps.length > 0) {
+      animateSteps(gameState.currentPlayer, initialSteps, 0, () => {
+        // After initial movement, process effects
+        setTimeout(processNextEffect, EFFECT_PAUSE);
+      });
+    } else {
+      // No initial movement, start processing effects
+      processNextEffect();
+    }
+  }, [animateSteps, gameState.currentPlayer, processNextEffect]);
+
+  // Handle chain selection
+  const handleSelectChain = useCallback((chain: Chain) => {
+    const result = selectChain(chain);
+    startMovementSequence(result);
+  }, [selectChain, startMovementSequence]);
 
   // Handle rebuttal modal confirmation
   const handleRebuttalConfirm = useCallback(() => {
     setShowRebuttalModal(false);
+    const { isAI } = confirmRebuttal();
     
-    const nextPlayer = gameState.currentPlayer === 'red' ? 'blue' : 'red';
-    const nextPlayerState = gameState.players[nextPlayer];
-    
-    setGameState(prev => ({
-      ...prev,
-      currentPlayer: nextPlayer,
-      phase: 'playing',
-      message: nextPlayerState.isAI ? 'Computer is thinking...' : 'Tap "Take Turn" to draw chains!',
-    }));
-
-    // Show turn modal for two-player mode
     if (mode === 'two-player') {
       setShowTurnModal(true);
     }
-  }, [gameState.currentPlayer, gameState.players, mode]);
+  }, [confirmRebuttal, mode]);
 
-  // Handle pending turn end
+  // AI turn logic - drawing chains
   useEffect(() => {
-    if (!pendingTurnEnd) return;
-    
-    const { reachedEnd } = pendingTurnEnd;
-    setPendingTurnEnd(null);
-    
-    // Determine if we should end the game
-    const shouldEndGame = () => {
-      if (reachedEnd && !firstFinisher) {
-        return false;
-      }
-      if (firstFinisher) {
-        setFinalTurnTaken(true);
-        return true;
-      }
-      return false;
-    };
-
-    if (shouldEndGame()) {
-      setGameState(prev => {
-        const redPos = prev.players.red.position;
-        const bluePos = prev.players.blue.position;
-        
-        let winner: Player | 'tie';
-        if (redPos === bluePos) {
-          winner = 'tie';
-        } else if (redPos > bluePos) {
-          winner = 'red';
-        } else {
-          winner = 'blue';
-        }
-        
-        onGameEnd(winner);
-        return { ...prev, phase: 'ended', winner };
-      });
-      return;
-    }
-
-    const nextPlayer = gameState.currentPlayer === 'red' ? 'blue' : 'red';
-    const justReachedEnd = reachedEnd && !firstFinisher;
-
-    if (justReachedEnd) {
-      setFirstFinisher(gameState.currentPlayer);
-      setShowRebuttalModal(true);
-      return;
-    }
-
-    setGameState(prev => {
-      const nextPlayerState = prev.players[nextPlayer];
-      return {
-        ...prev,
-        currentPlayer: nextPlayer,
-        phase: 'playing',
-        message: nextPlayerState.isAI ? 'Computer is thinking...' : 'Tap "Take Turn" to draw chains!',
-      };
-    });
-
-    if (mode === 'two-player') {
-      setShowTurnModal(true);
-    }
-  }, [pendingTurnEnd, firstFinisher, gameState.currentPlayer, mode, onGameEnd]);
-
-  // AI turn logic
-  useEffect(() => {
-    if (!isAITurn || gameState.phase !== 'playing') return;
+    if (!isAITurn || gameState.phase !== 'playing' || animatingPlayer) return;
 
     const timeout = setTimeout(() => {
       drawChains();
     }, 1500);
 
     return () => clearTimeout(timeout);
-  }, [isAITurn, gameState.phase, drawChains]);
+  }, [isAITurn, gameState.phase, drawChains, animatingPlayer]);
 
   // AI chain selection
   useEffect(() => {
     if (!isAITurn || gameState.phase !== 'selecting' || !gameState.drawnChains) return;
 
     const timeout = setTimeout(() => {
-      const [chain1, chain2] = gameState.drawnChains!;
-      let selectedChain: Chain;
-
-      switch (difficulty) {
-        case 'easy':
-          // Random choice
-          selectedChain = Math.random() > 0.5 ? chain1 : chain2;
-          break;
-        case 'medium':
-          // Choose the one that moves farther
-          selectedChain = chain1.length > chain2.length ? chain1 : chain2;
-          break;
-        case 'hard':
-          // Simple heuristic: avoid stars if possible
-          // For now, just pick the longer one
-          selectedChain = chain1.length > chain2.length ? chain1 : chain2;
-          break;
-        default:
-          selectedChain = chain1;
-      }
-
-      selectChain(selectedChain);
+      const selectedChain = getAIChoice(gameState.drawnChains!);
+      handleSelectChain(selectedChain);
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [isAITurn, gameState.phase, gameState.drawnChains, difficulty, selectChain]);
+  }, [isAITurn, gameState.phase, gameState.drawnChains, getAIChoice, handleSelectChain]);
+
+  const showPulsingButton = !isAITurn && gameState.phase === 'playing' && !animatingPlayer;
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
@@ -370,18 +303,24 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
           
           <div className="flex-1 w-full max-w-2xl">
             <GameBoard
-              redPosition={gameState.players.red.position}
-              bluePosition={gameState.players.blue.position}
+              redPosition={displayPositions.red}
+              bluePosition={displayPositions.blue}
+              spaces={boardSpaces}
+              animatingPlayer={animatingPlayer}
             />
           </div>
 
-          {/* Take Turn button */}
-          {!isAITurn && gameState.phase === 'playing' && (
+          {/* Take Turn button with pulsing effect */}
+          {showPulsingButton && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Button variant="play" size="xl" onClick={drawChains}>
+              <Button 
+                variant="playPulse" 
+                size="xl" 
+                onClick={drawChains}
+              >
                 Take Turn
               </Button>
             </motion.div>
@@ -390,7 +329,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
 
         {/* Right panel - Drawn chains */}
         <div className="lg:w-56 lg:mr-8">
-          {gameState.drawnChains && (
+          {gameState.drawnChains && !isAITurn && (
             <motion.div
               className="flex flex-col gap-4 p-5 rounded-2xl bg-card/70 backdrop-blur-md border-2 border-primary/30 shadow-glow"
               initial={{ opacity: 0, scale: 0.9, x: 20 }}
@@ -402,7 +341,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
                   key={chain.id}
                   chain={chain}
                   isSelected={gameState.selectedChain?.id === chain.id}
-                  onClick={!isAITurn ? () => selectChain(chain) : undefined}
+                  onClick={() => handleSelectChain(chain)}
                 />
               ))}
             </motion.div>
@@ -417,12 +356,11 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
         onDismiss={() => setShowTurnModal(false)}
       />
 
-      {/* Special space modal */}
-      <SpecialSpaceModal
-        isVisible={specialSpaceModal.isVisible}
-        type={specialSpaceModal.type}
-        value={specialSpaceModal.value}
-        onConfirm={handleSpecialSpaceConfirm}
+      {/* Effect modal for special spaces */}
+      <EffectModal
+        effect={currentEffect}
+        isVisible={showEffectModal}
+        onConfirm={handleEffectConfirm}
       />
 
       {/* Rebuttal turn modal */}

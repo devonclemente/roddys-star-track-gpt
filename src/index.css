@@ -166,6 +166,21 @@
   50% { transform: translateY(-8px); }
 }
 
+@keyframes button-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 30px hsl(140 70% 40% / 0.5);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 50px hsl(140 70% 40% / 0.8), 0 0 80px hsl(140 70% 40% / 0.4);
+  }
+}
+
+.animate-button-pulse {
+  animation: button-pulse 1.5s ease-in-out infinite;
+}
+
 /* Stars background effect */
 .stars {
   position: fixed;
