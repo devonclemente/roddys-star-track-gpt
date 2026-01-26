@@ -247,9 +247,8 @@ export function useGameLogic({ mode, difficulty, onGameEnd }: UseGameLogicProps)
         discardPile: newDiscardPile,
         phase: 'playing',
         isAnimating: false,
-        message: result.effects.length > 0 
-          ? result.effects[result.effects.length - 1]?.message ?? 'Turn complete!'
-          : 'Turn complete!',
+        // Safe array access using .at(-1) to prevent object injection (CWE-94)
+        message: result.effects.at(-1)?.message ?? 'Turn complete!',
       };
     });
 
