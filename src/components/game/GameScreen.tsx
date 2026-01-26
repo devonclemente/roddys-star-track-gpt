@@ -379,9 +379,9 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
             </div>
           </div>
 
-          {/* Game board - takes most of the space */}
-          <div className="flex-1 w-full flex items-center justify-center">
-            <div className="w-full max-w-md aspect-[4/3]">
+          {/* Game board - larger and closer to bins */}
+          <div className="flex-1 w-full flex items-start justify-center pt-1">
+            <div className="w-full max-w-lg aspect-[4/3]">
               <GameBoard
                 redPosition={displayPositions.red}
                 bluePosition={displayPositions.blue}
