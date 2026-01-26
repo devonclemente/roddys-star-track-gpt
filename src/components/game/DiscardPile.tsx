@@ -8,9 +8,9 @@ interface DiscardPileProps {
 export function DiscardPile({ chains }: DiscardPileProps) {
   // Group chains by length for display
   const chainsByLength = chains.reduce((acc, chain) => {
-    acc[chain.length] = (acc[chain.length] || 0) + 1;
+    acc.set(chain.length, (acc.get(chain.length) ?? 0) + 1);
     return acc;
-  }, {} as Record<number, number>);
+  }, new Map<number, number>());
 
   return (
     <div className="flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted">
@@ -23,8 +23,8 @@ export function DiscardPile({ chains }: DiscardPileProps) {
       ) : (
         <div className="flex flex-wrap gap-1 justify-center max-w-32">
           <AnimatePresence>
-            {Object.entries(chainsByLength)
-              .sort(([a], [b]) => Number(b) - Number(a))
+            {Array.from(chainsByLength.entries())
+              .sort(([a], [b]) => b - a)
               .map(([length, count]) => (
                 <motion.div
                   key={length}

@@ -69,7 +69,11 @@ export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // Swap using splice to avoid bracket notation
+    const itemI = shuffled.at(i) as T;
+    const itemJ = shuffled.at(j) as T;
+    shuffled.splice(i, 1, itemJ);
+    shuffled.splice(j, 1, itemI);
   }
   return shuffled;
 }

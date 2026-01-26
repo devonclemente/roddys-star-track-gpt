@@ -56,12 +56,13 @@ export function createBoardSpaces(): BoardSpace[] {
   const positions = generateSCurvePath(spaceDefinitions.length);
 
   spaceDefinitions.forEach((def, index) => {
+    const pos = positions.at(index);
     spaces.push({
       id: index,
       type: def.type,
       value: def.value,
-      x: positions[index].x,
-      y: positions[index].y,
+      x: pos?.x ?? 0,
+      y: pos?.y ?? 0,
     });
   });
 
@@ -138,8 +139,9 @@ function generateSCurvePath(count: number): { x: number; y: number }[] {
 
   // Use the predefined path or generate more if needed
   for (let i = 0; i < count; i++) {
-    if (i < path.length) {
-      positions.push(path[i]);
+    const pathPos = path.at(i);
+    if (pathPos) {
+      positions.push(pathPos);
     } else {
       // Fallback for any extra spaces
       positions.push({ x: 50 + (i % 10) * 5, y: 50 + Math.floor(i / 10) * 10 });
@@ -152,7 +154,8 @@ function generateSCurvePath(count: number): { x: number; y: number }[] {
 // Find the previous star space from a given position
 export function findPreviousStar(spaces: BoardSpace[], currentPosition: number): number {
   for (let i = currentPosition - 1; i >= 0; i--) {
-    if (spaces[i].type === 'star') {
+    const space = spaces.at(i);
+    if (space?.type === 'star') {
       return i;
     }
   }

@@ -7,17 +7,17 @@ interface GameTitleProps {
 }
 
 export function GameTitle({ size = 'lg', showRocket = false }: GameTitleProps) {
-  const sizeClasses = {
-    sm: 'text-3xl md:text-4xl',
-    md: 'text-4xl md:text-5xl',
-    lg: 'text-6xl md:text-7xl lg:text-8xl',
-  };
+  const sizeClasses = new Map([
+    ['sm', 'text-3xl md:text-4xl'],
+    ['md', 'text-4xl md:text-5xl'],
+    ['lg', 'text-6xl md:text-7xl lg:text-8xl'],
+  ]);
 
-  const rocketSizeClasses = {
-    sm: 'w-8 h-8 md:w-10 md:h-10',
-    md: 'w-10 h-10 md:w-12 md:h-12',
-    lg: 'w-14 h-14 md:w-16 md:h-16',
-  };
+  const rocketSizeClasses = new Map([
+    ['sm', 'w-8 h-8 md:w-10 md:h-10'],
+    ['md', 'w-10 h-10 md:w-12 md:h-12'],
+    ['lg', 'w-14 h-14 md:w-16 md:h-16'],
+  ]);
 
   return (
     <motion.div
@@ -34,7 +34,7 @@ export function GameTitle({ size = 'lg', showRocket = false }: GameTitleProps) {
           className="relative"
         >
           <Rocket 
-            className={`${rocketSizeClasses[size]} text-primary drop-shadow-[0_0_15px_hsl(var(--primary)/0.8)] rotate-45`}
+            className={`${rocketSizeClasses.get(size)} text-primary drop-shadow-[0_0_15px_hsl(var(--primary)/0.8)] rotate-45`}
             strokeWidth={1.5}
           />
           {/* Rocket trail effect */}
@@ -53,7 +53,7 @@ export function GameTitle({ size = 'lg', showRocket = false }: GameTitleProps) {
         </motion.div>
       )}
       <h1
-        className={`font-display ${sizeClasses[size]} text-center tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.8)]`}
+        className={`font-display ${sizeClasses.get(size)} text-center tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.8)]`}
       >
         <span className="bg-gradient-to-r from-yellow-300 via-primary to-orange-400 bg-clip-text text-transparent drop-shadow-lg">
           STAR

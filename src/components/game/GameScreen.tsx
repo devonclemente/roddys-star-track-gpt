@@ -24,6 +24,12 @@ interface GameScreenProps {
   onGameEnd: (winner: Player | 'tie') => void;
 }
 
+// Safe player accessor to avoid bracket notation
+const getPlayerState = <T extends { red: unknown; blue: unknown }>(
+  players: T,
+  player: Player
+): T['red'] => (player === 'red' ? players.red : players.blue);
+
 export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEnd }: GameScreenProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [showTurnModal, setShowTurnModal] = useState(false);
@@ -57,7 +63,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     isAnimating: false,
   }));
 
-  const currentPlayerState = gameState.players[gameState.currentPlayer];
+  const currentPlayerState = getPlayerState(gameState.players, gameState.currentPlayer);
   const isAITurn = currentPlayerState.isAI;
   const boardSpaces = createBoardSpaces();
   const endPosition = boardSpaces.length - 1;
@@ -114,7 +120,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
   // Complete the movement after special space modal is confirmed
   const completeMovement = useCallback((newPosition: number, opponentPosition: number, message: string) => {
     setGameState(prev => {
-      const player = prev.players[prev.currentPlayer];
+      const player = getPlayerState(prev.players, prev.currentPlayer);
       const opponent = prev.currentPlayer === 'red' ? 'blue' : 'red';
       
       const newDiscardPile = prev.selectedChain 
@@ -153,7 +159,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
 
   // Resolve movement and special space effects
   const resolveMovement = useCallback((spaces: number) => {
-    const player = gameState.players[gameState.currentPlayer];
+    const player = getPlayerState(gameState.players, gameState.currentPlayer);
     let newPosition = Math.min(player.position + spaces, endPosition);
     const landedSpace = boardSpaces[newPosition];
     let message = '';

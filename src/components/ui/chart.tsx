@@ -311,8 +311,12 @@ const ChartLegendContent = React.forwardRef<
 });
 ChartLegendContent.displayName = "ChartLegend";
 
+// Safe property accessor to avoid bracket notation
+const hasOwn = (obj: object, prop: string): boolean =>
+  Object.prototype.hasOwnProperty.call(obj, prop);
+
 // Helper to extract item config from a payload.
-function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
+function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string): ChartConfig[string] | undefined {
   if (typeof payload !== "object" || payload === null) {
     return undefined;
   }
@@ -324,17 +328,22 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
 
   let configLabelKey: string = key;
 
-  if (key in payload && typeof payload[key as keyof typeof payload] === "string") {
-    configLabelKey = payload[key as keyof typeof payload] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string;
+  if (hasOwn(payload, key)) {
+    const payloadValue = Reflect.get(payload, key);
+    if (typeof payloadValue === "string") {
+      configLabelKey = payloadValue;
+    }
+  } else if (payloadPayload && hasOwn(payloadPayload, key)) {
+    const nestedValue = Reflect.get(payloadPayload, key);
+    if (typeof nestedValue === "string") {
+      configLabelKey = nestedValue;
+    }
   }
 
-  return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config];
+  if (hasOwn(config, configLabelKey)) {
+    return config[configLabelKey as keyof typeof config];
+  }
+  return config[key as keyof typeof config];
 }
 
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle };

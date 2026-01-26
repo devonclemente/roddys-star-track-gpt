@@ -56,14 +56,14 @@ export function GameBoard({
       {/* Path lines connecting spaces (decorative) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
         {spaces.slice(0, -1).map((space, i) => {
-          const nextSpace = spaces[i + 1];
+          const nextSpace = spaces.at(i + 1);
           return (
             <line
               key={space.id}
               x1={`${space.x}%`}
               y1={`${space.y}%`}
-              x2={`${nextSpace.x}%`}
-              y2={`${nextSpace.y}%`}
+              x2={`${nextSpace?.x}%`}
+              y2={`${nextSpace?.y}%`}
               stroke="hsl(var(--primary))"
               strokeWidth="2"
               strokeDasharray="4 4"

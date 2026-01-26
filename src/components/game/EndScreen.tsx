@@ -35,7 +35,7 @@ function FloatingParticle({ delay, x, color }: { delay: number; x: number; color
 // Confetti piece component
 function ConfettiPiece({ index }: { index: number }) {
   const colors = ['bg-primary', 'bg-space-orange', 'bg-yellow-400', 'bg-pink-400', 'bg-cyan-400'];
-  const color = colors[index % colors.length];
+  const color = colors.at(index % colors.length) ?? colors.at(0);
   const startX = Math.random() * 100;
   const endX = startX + (Math.random() - 0.5) * 40;
   const rotation = Math.random() * 720 - 360;
