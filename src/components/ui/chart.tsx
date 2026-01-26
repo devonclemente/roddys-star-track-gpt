@@ -84,21 +84,14 @@ function sanitizeCSSColor(value: string): string {
   return "";
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
-
-  if (!colorConfig.length) {
-    return null;
-  }
-
+// Generate CSS string for chart theming
+function generateChartCSS(id: string, config: ChartConfig): string {
+  const colorConfig = Object.entries(config).filter(([_, cfg]) => cfg.theme || cfg.color);
   const sanitizedId = sanitizeCSSIdentifier(id);
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
+  return Object.entries(THEMES)
+    .map(
+      ([theme, prefix]) => `
 ${prefix} [data-chart=${sanitizedId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
@@ -110,11 +103,25 @@ ${colorConfig
   .join("\n")}
 }
 `,
-          )
-          .join("\n"),
-      }}
-    />
-  );
+    )
+    .join("\n");
+}
+
+const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const styleRef = React.useRef<HTMLStyleElement>(null);
+  const colorConfig = Object.entries(config).filter(([_, cfg]) => cfg.theme || cfg.color);
+
+  React.useEffect(() => {
+    if (styleRef.current && colorConfig.length) {
+      styleRef.current.textContent = generateChartCSS(id, config);
+    }
+  }, [id, config, colorConfig.length]);
+
+  if (!colorConfig.length) {
+    return null;
+  }
+
+  return <style ref={styleRef} />;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
