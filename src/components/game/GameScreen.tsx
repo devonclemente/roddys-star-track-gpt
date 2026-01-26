@@ -287,10 +287,9 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
 
       {/* Main game area */}
       <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-4 p-4 pt-0">
-        {/* Left panel - Chains */}
-        <div className="flex flex-row lg:flex-col gap-4 lg:w-48">
+        {/* Left panel - Pickup Bin */}
+        <div className="flex flex-row lg:flex-col gap-4 lg:w-48 lg:pt-16">
           <PickupBin remainingCount={gameState.pickupBin.length} />
-          <DiscardPile chains={gameState.discardPile} />
         </div>
 
         {/* Center - Game board */}
@@ -327,8 +326,10 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
           )}
         </div>
 
-        {/* Right panel - Drawn chains */}
-        <div className="lg:w-56 lg:mr-8">
+        {/* Right panel - Discard Pile and Drawn chains */}
+        <div className="flex flex-col gap-4 lg:w-56 lg:pt-16">
+          <DiscardPile chains={gameState.discardPile} />
+          
           {gameState.drawnChains && !isAITurn && (
             <motion.div
               className="flex flex-col gap-4 p-5 rounded-2xl bg-card/70 backdrop-blur-md border-2 border-primary/30 shadow-glow"
