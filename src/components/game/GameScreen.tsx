@@ -334,9 +334,9 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
         </div>
       </main>
 
-      {/* Take Turn button - centered below the board */}
+      {/* Take Turn button - positioned to split space between board and bottom */}
       {showPulsingButton && (
-        <div className="relative z-10 flex justify-center pb-6">
+        <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2 z-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
