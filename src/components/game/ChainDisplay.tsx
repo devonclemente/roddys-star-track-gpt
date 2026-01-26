@@ -7,6 +7,7 @@ interface ChainDisplayProps {
   isRevealed?: boolean;
   onClick?: () => void;
   size?: 'sm' | 'md' | 'lg';
+  compact?: boolean;
 }
 
 // Silver chain color
@@ -112,7 +113,8 @@ export function ChainDisplay({
   isSelected = false, 
   isRevealed = true,
   onClick,
-  size = 'md'
+  size = 'md',
+  compact = false
 }: ChainDisplayProps) {
   if (!isRevealed) {
     return (
@@ -125,6 +127,28 @@ export function ChainDisplay({
         whileTap={{ scale: 0.98 }}
       >
         <span className="text-muted-foreground font-body">?</span>
+      </motion.div>
+    );
+  }
+
+  // Compact mode for mobile
+  if (compact) {
+    return (
+      <motion.div
+        className={`flex flex-col items-center gap-1 p-2 rounded-lg bg-card/50 backdrop-blur-sm border-2 cursor-pointer transition-all ${
+          isSelected 
+            ? 'border-primary shadow-glow' 
+            : 'border-transparent hover:border-primary/50'
+        }`}
+        onClick={onClick}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <InterlockingChain length={chain.length} size="sm" />
+        <div className="flex items-center justify-center px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-display text-sm">
+          {chain.length}
+        </div>
       </motion.div>
     );
   }

@@ -268,67 +268,124 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     <div className="relative min-h-screen flex flex-col overflow-hidden">
       <StarBackground />
       
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between p-4">
-        <GameTitle size="sm" showRocket />
+      {/* Header - Compact on mobile */}
+      <header className="relative z-10 flex items-center justify-between p-2 sm:p-4">
+        <div className="scale-75 sm:scale-100 origin-left">
+          <GameTitle size="sm" showRocket />
+        </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)}>
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-10 sm:h-10" onClick={() => setIsMuted(!isMuted)}>
+            {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={onShowRules}>
-            <BookOpen className="w-5 h-5" />
+          <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-10 sm:h-10" onClick={onShowRules}>
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={onMainMenu}>
-            <Home className="w-5 h-5" />
+          <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-10 sm:h-10" onClick={onMainMenu}>
+            <Home className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
       </header>
 
-      {/* Main game area */}
-      <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-4 p-4 pt-0">
-        {/* Left panel - Pickup Bin */}
-        <div className="flex flex-row lg:flex-col gap-4 lg:w-48 lg:pt-16">
-          <PickupBin remainingCount={gameState.pickupBin.length} />
-        </div>
-
-        {/* Center - Game board */}
-        <div className="flex-1 flex flex-col items-center gap-2">
+      {/* Main game area - optimized for mobile */}
+      <main className="relative z-10 flex-1 flex flex-col gap-2 sm:gap-4 p-2 sm:p-4 pt-0">
+        {/* Turn indicator - always visible at top */}
+        <div className="flex justify-center">
           <TurnIndicator 
             currentPlayer={gameState.currentPlayer} 
             isAI={isAITurn}
             message={gameState.message}
           />
-          
-          <div className="flex-1 w-full max-w-2xl">
-            <GameBoard
-              redPosition={displayPositions.red}
-              bluePosition={displayPositions.blue}
-              spaces={boardSpaces}
-              animatingPlayer={animatingPlayer}
-            />
+        </div>
+
+        {/* Desktop layout with side panels */}
+        <div className="hidden lg:flex lg:flex-row lg:gap-4 lg:flex-1">
+          {/* Left panel - Pickup Bin */}
+          <div className="flex flex-col gap-4 w-48 pt-8">
+            <PickupBin remainingCount={gameState.pickupBin.length} />
+          </div>
+
+          {/* Center - Game board */}
+          <div className="flex-1 flex flex-col items-center">
+            <div className="flex-1 w-full max-w-2xl">
+              <GameBoard
+                redPosition={displayPositions.red}
+                bluePosition={displayPositions.blue}
+                spaces={boardSpaces}
+                animatingPlayer={animatingPlayer}
+              />
+            </div>
+          </div>
+
+          {/* Right panel - Discard Pile and Drawn chains */}
+          <div className="flex flex-col gap-4 w-56 pt-8">
+            <DiscardPile chains={gameState.discardPile} />
+            
+            {gameState.drawnChains && !isAITurn && (
+              <motion.div
+                className="flex flex-col gap-4 p-5 rounded-2xl bg-card/70 backdrop-blur-md border-2 border-primary/30 shadow-glow"
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+              >
+                <h3 className="font-display text-lg text-center text-foreground">Your Chains</h3>
+                {gameState.drawnChains.map((chain) => (
+                  <ChainDisplay
+                    key={chain.id}
+                    chain={chain}
+                    isSelected={gameState.selectedChain?.id === chain.id}
+                    onClick={() => handleSelectChain(chain)}
+                  />
+                ))}
+              </motion.div>
+            )}
           </div>
         </div>
 
-        {/* Right panel - Discard Pile and Drawn chains */}
-        <div className="flex flex-col gap-4 lg:w-56 lg:pt-16">
-          <DiscardPile chains={gameState.discardPile} />
-          
+        {/* Mobile layout - board focused */}
+        <div className="flex lg:hidden flex-col flex-1 gap-2">
+          {/* Game board - takes most of the space */}
+          <div className="flex-1 w-full flex items-center justify-center">
+            <div className="w-full max-w-md aspect-[4/3]">
+              <GameBoard
+                redPosition={displayPositions.red}
+                bluePosition={displayPositions.blue}
+                spaces={boardSpaces}
+                animatingPlayer={animatingPlayer}
+              />
+            </div>
+          </div>
+
+          {/* Mobile stats row - compact */}
+          <div className="flex justify-center gap-3 px-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-muted">
+              <span className="text-xs text-muted-foreground">Chains:</span>
+              <span className="text-sm font-display text-primary">{gameState.pickupBin.length}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-muted">
+              <span className="text-xs text-muted-foreground">Used:</span>
+              <span className="text-sm font-display text-secondary">{gameState.discardPile.length}</span>
+            </div>
+          </div>
+
+          {/* Drawn chains for mobile - horizontal scrollable */}
           {gameState.drawnChains && !isAITurn && (
             <motion.div
-              className="flex flex-col gap-4 p-5 rounded-2xl bg-card/70 backdrop-blur-md border-2 border-primary/30 shadow-glow"
-              initial={{ opacity: 0, scale: 0.9, x: 20 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
+              className="flex flex-col gap-2 p-3 rounded-xl bg-card/70 backdrop-blur-md border-2 border-primary/30 mx-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              <h3 className="font-display text-lg text-center text-foreground">Your Chains</h3>
-              {gameState.drawnChains.map((chain) => (
-                <ChainDisplay
-                  key={chain.id}
-                  chain={chain}
-                  isSelected={gameState.selectedChain?.id === chain.id}
-                  onClick={() => handleSelectChain(chain)}
-                />
-              ))}
+              <h3 className="font-display text-sm text-center text-foreground">Choose Your Chain</h3>
+              <div className="flex gap-2 justify-center">
+                {gameState.drawnChains.map((chain) => (
+                  <ChainDisplay
+                    key={chain.id}
+                    chain={chain}
+                    isSelected={gameState.selectedChain?.id === chain.id}
+                    onClick={() => handleSelectChain(chain)}
+                    compact
+                  />
+                ))}
+              </div>
             </motion.div>
           )}
         </div>
@@ -336,7 +393,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
 
       {/* Take Turn button - positioned to split space between board and bottom */}
       {showPulsingButton && (
-        <div className="absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute bottom-4 sm:bottom-[6%] left-1/2 -translate-x-1/2 z-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -344,6 +401,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
             <Button 
               variant="playPulse" 
               size="xl" 
+              className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
               onClick={drawChains}
             >
               Take Turn
