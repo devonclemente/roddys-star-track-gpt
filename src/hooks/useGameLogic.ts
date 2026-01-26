@@ -103,7 +103,8 @@ export function useGameLogic({ mode, difficulty, onGameEnd }: UseGameLogicProps)
     const maxIterations = 10; // Prevent infinite loops
     
     while (iterationCount < maxIterations) {
-      const landedSpace = boardSpaces[currentPos];
+      // Safe array access to prevent object injection (CWE-94)
+      const landedSpace = boardSpaces.at(currentPos);
       if (!landedSpace) break;
       
       if (landedSpace.type === 'numbered' && landedSpace.value !== undefined) {
@@ -285,7 +286,8 @@ export function useGameLogic({ mode, difficulty, onGameEnd }: UseGameLogicProps)
 
     // Normal turn end - switch players
     const nextPlayer = gameState.currentPlayer === 'red' ? 'blue' : 'red';
-    const nextPlayerState = gameState.players[nextPlayer];
+    // Use safe accessor to prevent object injection (CWE-94)
+    const nextPlayerState = getPlayerState(gameState.players, nextPlayer);
 
     setGameState(prev => ({
       ...prev,
@@ -304,7 +306,8 @@ export function useGameLogic({ mode, difficulty, onGameEnd }: UseGameLogicProps)
   // Handle rebuttal confirmation
   const confirmRebuttal = useCallback(() => {
     const nextPlayer = gameState.currentPlayer === 'red' ? 'blue' : 'red';
-    const nextPlayerState = gameState.players[nextPlayer];
+    // Use safe accessor to prevent object injection (CWE-94)
+    const nextPlayerState = getPlayerState(gameState.players, nextPlayer);
 
     setGameState(prev => ({
       ...prev,

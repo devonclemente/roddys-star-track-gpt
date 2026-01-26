@@ -52,7 +52,8 @@ export function useMovementAnimation() {
       return;
     }
 
-    const step = steps[stepIndex];
+    // Safe array access to prevent object injection (CWE-94)
+    const step = steps.at(stepIndex);
     if (!step) return;
     
     setAnimationState(prev => ({

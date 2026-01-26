@@ -10,7 +10,9 @@ interface AnimatedPawnProps {
 }
 
 export function AnimatedPawn({ color, position, spaces, isAnimating = false, isSharing = false }: AnimatedPawnProps) {
-  const space = spaces[position];
+  // Validate index before array access to prevent object injection (CWE-94)
+  if (position < 0 || position >= spaces.length || !Number.isInteger(position)) return null;
+  const space = spaces.at(position);
   if (!space) return null;
 
   // Offset pawns horizontally when sharing a space

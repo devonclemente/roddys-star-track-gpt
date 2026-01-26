@@ -84,7 +84,8 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
       return;
     }
 
-    const step = steps[startIndex];
+    // Safe array access to prevent object injection (CWE-94)
+    const step = steps.at(startIndex);
     if (!step) {
       onComplete();
       return;
@@ -128,8 +129,8 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
       return;
     }
 
-    // Show the current effect
-    const effect = queue.effects[effectIdx];
+    // Show the current effect - safe array access (CWE-94)
+    const effect = queue.effects.at(effectIdx);
     if (!effect) return;
     
     setCurrentEffect(effect);
@@ -145,7 +146,8 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     if (!queue) return;
 
     const currentEffectIdx = effectIndexRef.current;
-    const effect = queue.effects[currentEffectIdx];
+    // Safe array access to prevent object injection (CWE-94)
+    const effect = queue.effects.at(currentEffectIdx);
     
     // Calculate which steps to animate for this effect
     // We need to find the steps that correspond to this effect
@@ -156,7 +158,8 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     let newStepIdx = currentStepIdx;
     
     for (let i = currentStepIdx; i < queue.steps.length; i++) {
-      const step = queue.steps[i];
+      // Safe array access to prevent object injection (CWE-94)
+      const step = queue.steps.at(i);
       if (!step) break;
       
       // Check if this step is part of the current effect
@@ -192,7 +195,8 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
     // Find where initial movement ends (before special space effects)
     let initialEndIdx = 0;
     for (let i = 0; i < result.steps.length; i++) {
-      const step = result.steps[i];
+      // Safe array access to prevent object injection (CWE-94)
+      const step = result.steps.at(i);
       if (step?.type === 'move') {
         initialEndIdx = i + 1;
       } else {
