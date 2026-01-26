@@ -58,6 +58,32 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+// Sanitize CSS identifier to prevent injection (allows alphanumeric, hyphens, underscores)
+function sanitizeCSSIdentifier(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
+// Sanitize CSS color value to prevent injection
+function sanitizeCSSColor(value: string): string {
+  // Allow hex colors, rgb/rgba/hsl/hsla functions, and named colors
+  const hexPattern = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+  const rgbPattern = /^rgba?\(\s*[\d.%,\s/]+\)$/;
+  const hslPattern = /^hsla?\(\s*[\d.%,\s/]+\)$/;
+  const namedColorPattern = /^[a-zA-Z]+$/;
+  const cssVarPattern = /^var\(--[a-zA-Z0-9_-]+\)$/;
+
+  if (
+    hexPattern.test(value) ||
+    rgbPattern.test(value) ||
+    hslPattern.test(value) ||
+    namedColorPattern.test(value) ||
+    cssVarPattern.test(value)
+  ) {
+    return value;
+  }
+  return "";
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
 
@@ -65,17 +91,21 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  const sanitizedId = sanitizeCSSIdentifier(id);
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${sanitizedId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    const sanitizedKey = sanitizeCSSIdentifier(key);
+    const sanitizedColor = color ? sanitizeCSSColor(color) : "";
+    return sanitizedColor ? `  --color-${sanitizedKey}: ${sanitizedColor};` : null;
   })
   .join("\n")}
 }
