@@ -308,22 +308,6 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
               animatingPlayer={animatingPlayer}
             />
           </div>
-
-          {/* Take Turn button with pulsing effect */}
-          {showPulsingButton && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Button 
-                variant="playPulse" 
-                size="xl" 
-                onClick={drawChains}
-              >
-                Take Turn
-              </Button>
-            </motion.div>
-          )}
         </div>
 
         {/* Right panel - Discard Pile and Drawn chains */}
@@ -349,6 +333,24 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
           )}
         </div>
       </main>
+
+      {/* Take Turn button - centered below the board */}
+      {showPulsingButton && (
+        <div className="relative z-10 flex justify-center pb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Button 
+              variant="playPulse" 
+              size="xl" 
+              onClick={drawChains}
+            >
+              Take Turn
+            </Button>
+          </motion.div>
+        </div>
+      )}
 
       {/* Player turn modal for two-player */}
       <PlayerTurnModal
