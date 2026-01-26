@@ -13,28 +13,28 @@ export function DiscardPile({ chains }: DiscardPileProps) {
   }, new Map<number, number>());
 
   return (
-    <div className="flex flex-col items-center p-5 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted w-44 h-36">
-      <p className="text-sm font-body text-muted-foreground mb-2">Discard Pile</p>
+    <div className="flex flex-col items-center p-6 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-muted w-52 h-44">
+      <p className="text-base font-body text-muted-foreground mb-3">Discard Pile</p>
       
       {chains.length === 0 ? (
-        <div className="w-24 h-20 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-          <span className="text-xs text-muted-foreground">Empty</span>
+        <div className="w-32 h-24 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+          <span className="text-sm text-muted-foreground">Empty</span>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1 justify-center max-w-36">
+        <div className="flex flex-wrap gap-1.5 justify-center max-w-44">
           <AnimatePresence>
             {Array.from(chainsByLength.entries())
               .sort(([a], [b]) => b - a)
               .map(([length, count]) => (
                 <motion.div
                   key={length}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/50"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/50"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                 >
-                  <span className="text-xs font-display text-primary">{length}</span>
-                  <span className="text-xs text-muted-foreground">×{count}</span>
+                  <span className="text-sm font-display text-primary">{length}</span>
+                  <span className="text-sm text-muted-foreground">×{count}</span>
                 </motion.div>
               ))}
           </AnimatePresence>
@@ -42,7 +42,7 @@ export function DiscardPile({ chains }: DiscardPileProps) {
       )}
       
       {/* Total count */}
-      <p className="mt-auto text-xs text-muted-foreground">
+      <p className="mt-auto text-sm text-muted-foreground">
         {chains.length} used
       </p>
     </div>
