@@ -162,8 +162,8 @@ export function useGameLogic({ mode, difficulty, onGameEnd }: UseGameLogicProps)
           opponentPos = bumpedPos;
         }
         
-        iterationCount++;
-        continue;
+        // STOP here - don't chain from star returns (landing on a previous star doesn't trigger it again)
+        break;
       }
       
       // Normal space or end - stop checking
