@@ -343,6 +343,46 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
 
         {/* Mobile layout - board focused */}
         <div className="flex lg:hidden flex-col flex-1 gap-2">
+          {/* Mobile bins row - compact horizontal layout */}
+          <div className="flex justify-center gap-3 px-2">
+            {/* Compact Pickup Bin */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card/60 backdrop-blur-sm border border-muted">
+              <div className="relative w-8 h-6 bg-gradient-to-b from-muted to-space-deep rounded border-2 border-muted-foreground/30 overflow-hidden flex items-center justify-center">
+                <span className="text-xs text-muted-foreground/50 font-display">?</span>
+                {gameState.pickupBin.length > 0 && (
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-px">
+                    <div className="w-1 h-2 bg-gradient-to-b from-red-400 to-red-600 rounded-full" />
+                    <div className="w-1 h-1.5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full" />
+                    <div className="w-1 h-2.5 bg-gradient-to-b from-green-400 to-green-600 rounded-full" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-muted-foreground leading-tight">Pickup</span>
+                <span className="text-sm font-display text-primary leading-tight">{gameState.pickupBin.length}</span>
+              </div>
+            </div>
+
+            {/* Compact Discard Pile */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card/60 backdrop-blur-sm border border-muted">
+              <div className="w-8 h-6 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                {gameState.discardPile.length > 0 ? (
+                  <div className="flex gap-px">
+                    {gameState.discardPile.slice(-3).map((_, i) => (
+                      <div key={i} className="w-1.5 h-3 bg-muted-foreground/40 rounded-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-[8px] text-muted-foreground/50">—</span>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-muted-foreground leading-tight">Discard</span>
+                <span className="text-sm font-display text-secondary leading-tight">{gameState.discardPile.length}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Game board - takes most of the space */}
           <div className="flex-1 w-full flex items-center justify-center">
             <div className="w-full max-w-md aspect-[4/3]">
@@ -355,19 +395,7 @@ export function GameScreen({ mode, difficulty, onMainMenu, onShowRules, onGameEn
             </div>
           </div>
 
-          {/* Mobile stats row - compact */}
-          <div className="flex justify-center gap-3 px-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-muted">
-              <span className="text-xs text-muted-foreground">Chains:</span>
-              <span className="text-sm font-display text-primary">{gameState.pickupBin.length}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-muted">
-              <span className="text-xs text-muted-foreground">Used:</span>
-              <span className="text-sm font-display text-secondary">{gameState.discardPile.length}</span>
-            </div>
-          </div>
-
-          {/* Drawn chains for mobile - horizontal scrollable */}
+          {/* Drawn chains for mobile - horizontal layout */}
           {gameState.drawnChains && !isAITurn && (
             <motion.div
               className="flex flex-col gap-2 p-3 rounded-xl bg-card/70 backdrop-blur-md border-2 border-primary/30 mx-2"
