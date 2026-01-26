@@ -95,7 +95,9 @@ function generateChartCSS(id: string, config: ChartConfig): string {
 ${prefix} [data-chart=${sanitizedId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    const color = (itemConfig.theme && hasOwn(itemConfig.theme, theme)
+      ? Reflect.get(itemConfig.theme, theme) as string
+      : undefined) || itemConfig.color;
     const sanitizedKey = sanitizeCSSIdentifier(key);
     const sanitizedColor = color ? sanitizeCSSColor(color) : "";
     return sanitizedColor ? `  --color-${sanitizedKey}: ${sanitizedColor};` : null;
@@ -167,7 +169,7 @@ const ChartTooltipContent = React.forwardRef<
       const itemConfig = getPayloadConfigFromPayload(config, item, key);
       const value =
         !labelKey && typeof label === "string"
-          ? config[label as keyof typeof config]?.label || label
+          ? (hasOwn(config, label) ? (Reflect.get(config, label) as ChartConfig[string])?.label : undefined) || label
           : itemConfig?.label;
 
       if (labelFormatter) {
@@ -341,9 +343,9 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
   }
 
   if (hasOwn(config, configLabelKey)) {
-    return config[configLabelKey as keyof typeof config];
+    return Reflect.get(config, configLabelKey) as ChartConfig[string];
   }
-  return config[key as keyof typeof config];
+  return hasOwn(config, key) ? Reflect.get(config, key) as ChartConfig[string] : undefined;
 }
 
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle };
