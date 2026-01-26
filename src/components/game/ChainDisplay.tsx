@@ -20,14 +20,13 @@ function ChainLink({
   index: number;
   size: 'sm' | 'md' | 'lg';
 }) {
-  const sizeMap = {
-    sm: { width: 24, height: 36 },
-    md: { width: 32, height: 48 },
-    lg: { width: 40, height: 60 },
-  } as const;
+  const sizeMap = new Map([
+    ['sm', { width: 24, height: 36 }],
+    ['md', { width: 32, height: 48 }],
+    ['lg', { width: 40, height: 60 }],
+  ]);
 
-  const dimensions = Object.hasOwn(sizeMap, size) ? sizeMap[size] : sizeMap.md;
-  const { width, height } = dimensions;
+  const { width, height } = sizeMap.get(size) ?? { width: 32, height: 48 };
   const isEven = index % 2 === 0;
   
   // Serpentine vertical offset for easier counting
