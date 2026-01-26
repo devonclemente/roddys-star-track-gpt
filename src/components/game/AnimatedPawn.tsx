@@ -6,21 +6,25 @@ interface AnimatedPawnProps {
   position: number;
   spaces: BoardSpace[];
   isAnimating?: boolean;
+  isSharing?: boolean; // True when both pawns are on the same space
 }
 
-export function AnimatedPawn({ color, position, spaces, isAnimating = false }: AnimatedPawnProps) {
+export function AnimatedPawn({ color, position, spaces, isAnimating = false, isSharing = false }: AnimatedPawnProps) {
   const space = spaces[position];
   if (!space) return null;
+
+  // Offset pawns horizontally when sharing a space
+  const xOffset = isSharing ? (color === 'red' ? -0.8 : 0.8) : 0;
 
   return (
     <motion.div
       className="absolute pointer-events-none z-20"
       style={{
-        left: `${space.x}%`,
+        left: `${space.x + xOffset}%`,
         top: `${space.y}%`,
       }}
       animate={{
-        left: `${space.x}%`,
+        left: `${space.x + xOffset}%`,
         top: `${space.y}%`,
       }}
       transition={{
@@ -64,6 +68,8 @@ interface PawnLayerProps {
 }
 
 export function PawnLayer({ redPosition, bluePosition, spaces, animatingPlayer }: PawnLayerProps) {
+  const isSharing = redPosition === bluePosition;
+
   return (
     <>
       <AnimatedPawn 
@@ -71,12 +77,14 @@ export function PawnLayer({ redPosition, bluePosition, spaces, animatingPlayer }
         position={redPosition} 
         spaces={spaces}
         isAnimating={animatingPlayer === 'red'}
+        isSharing={isSharing}
       />
       <AnimatedPawn 
         color="blue" 
         position={bluePosition} 
         spaces={spaces}
         isAnimating={animatingPlayer === 'blue'}
+        isSharing={isSharing}
       />
     </>
   );
