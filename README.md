@@ -1,3 +1,7 @@
+please support this great organization, the original creator of this game that my nephews loves - https://www.mathpentath.org/
+
+Purchase the game here: https://www.mathpentath.org/product/introductory-game-set/
+
 # Welcome to your Lovable project
 
 ## Project info
@@ -65,6 +69,8 @@ This project is built with:
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
+
+
 
 Yes, you can!
 
