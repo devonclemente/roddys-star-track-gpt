@@ -1,73 +1,41 @@
-# Welcome to your Lovable project
+# Roddy's Star Track
 
-## Project info
+A digital adaptation of **Star Track**, a chain-picking board game originally designed by the [Math Pentathlon Organization](https://mathpentathlon.org). Built as a personal project to practice React + TypeScript and explore AI-assisted development.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+🎮 **[Play it live → devonclemente.com/roddysgame](https://devonclemente.com/roddysgame)**
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## How it works
 
-**Use Lovable**
+Players draw 2 chains from a pickup bin each turn and choose one to advance along a 41-space board. Special spaces either send you back to the nearest star or jump you forward. First to reach the end triggers a rebuttal — giving the opponent one final turn.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **VS AI** — Easy, Medium, or Hard difficulty
+- **2-Player** — Local co-op on the same device
+- **44 chains** in the pickup bin, lengths 2–9 (weighted toward shorter chains)
+- **Collision mechanic** — land on your opponent, bump them back 2 spaces
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech stack
 
-**Use your preferred IDE**
+- React 18 + TypeScript
+- Vite
+- shadcn-ui + Tailwind CSS
+- Framer Motion (board animations)
+- Vitest (unit tests)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Run locally
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone https://github.com/devonclemente/roddys-star-track-gpt
+cd roddys-star-track-gpt
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Notes
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+This project was built using Lovable (AI-assisted web app builder) as an experiment in AI-first development — comparing outputs from Claude and ChatGPT at each step. The game logic (`useGameLogic.ts`) is fully custom: chain distribution, movement resolution, collision detection, rebuttal mechanics, and AI decision-making.
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Built by [Devon Clemente](https://devonclemente.com)
